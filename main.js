@@ -51,20 +51,41 @@ const getSeats = (planeWidth, colCount, rowCount, colPadding, rowPadding, seatSi
 	}).flat();
 }
 
+const getPassengers = (r, clr, seats) =>
+{
+	const passengers = [];
+
+	seats = seats.map(seat => seat);
+	while (seats.length)
+	{
+		const randIndex = Math.random() * (seats.length - 1);
+		const [seat] = seats.splice(randIndex, 1);
+		passengers.push(new Passenger(-r, height / 2, r, 3, clr, seat));
+	}
+
+	return passengers;
+}
+
 // P5 section
 const planeWidth = 250;
 let seats;
+let passengers;
 
 function setup()
 {
 	createCanvas(900, 500);
 	seats = getSeats(planeWidth, 16, 6, 10, 5, 30);
+	passengers = getPassengers(15, color(255, 255, 0), seats);
 }
 
 function draw()
 {
-
 	background('#e0e0e0');
 	drawPlaneOutline(planeWidth);
 	seats.forEach(seat => seat.draw());
+	passengers.forEach(passenger =>
+	{
+		passenger.draw()
+		passenger.update();
+	});
 }
