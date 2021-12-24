@@ -3,6 +3,7 @@ const wallStrokeWeight = 5;
 const drawPlaneOutline = (planeWidth) =>
 {
 	const halfHeight = height / 2;
+	const halfPlaneWidth = planeWidth / 2;
 	const qtrWidth = width / 4;
 	const outerEdgeOffset = 140;
 	const innerEdgeOffsetX = 100;
@@ -11,34 +12,33 @@ const drawPlaneOutline = (planeWidth) =>
 	// draw walls
 	stroke(150);
 	strokeWeight(wallStrokeWeight);
-	line(0, halfHeight - planeWidth / 2, width, halfHeight - planeWidth / 2);
-	line(0, halfHeight + planeWidth / 2, width, halfHeight + planeWidth / 2);
+	line(0, halfHeight - halfPlaneWidth, width, halfHeight - halfPlaneWidth);
+	line(0, halfHeight + halfPlaneWidth, width, halfHeight + halfPlaneWidth);
 
 	// Draw back wing edges
-	line(qtrWidth * 3, halfHeight - planeWidth / 2, qtrWidth * 3 + 20, 0);
-	line(qtrWidth * 3, halfHeight + planeWidth / 2, qtrWidth * 3 + 20, height);
+	line(qtrWidth * 3, halfHeight - halfPlaneWidth, qtrWidth * 3 + 20, 0);
+	line(qtrWidth * 3, halfHeight + halfPlaneWidth, qtrWidth * 3 + 20, height);
 
 	// Draw front inner wing edges
-	line(qtrWidth, halfHeight - planeWidth / 2, qtrWidth + innerEdgeOffsetX, halfHeight - (planeWidth / 2 + innerEdgeOffsetY));
-	line(qtrWidth, halfHeight + planeWidth / 2, qtrWidth + innerEdgeOffsetX, halfHeight + (planeWidth / 2 + innerEdgeOffsetY));
+	line(qtrWidth, halfHeight - halfPlaneWidth, qtrWidth + innerEdgeOffsetX, halfHeight - (halfPlaneWidth + innerEdgeOffsetY));
+	line(qtrWidth, halfHeight + halfPlaneWidth, qtrWidth + innerEdgeOffsetX, halfHeight + (halfPlaneWidth + innerEdgeOffsetY));
 
 	// Draw front outer wing edges
-	line(qtrWidth + innerEdgeOffsetX, halfHeight - (planeWidth / 2 + innerEdgeOffsetY), qtrWidth + outerEdgeOffset, 0);
-	line(qtrWidth + innerEdgeOffsetX, halfHeight + (planeWidth / 2 + innerEdgeOffsetY), qtrWidth + outerEdgeOffset, height);
+	line(qtrWidth + innerEdgeOffsetX, halfHeight - (halfPlaneWidth + innerEdgeOffsetY), qtrWidth + outerEdgeOffset, 0);
+	line(qtrWidth + innerEdgeOffsetX, halfHeight + (halfPlaneWidth + innerEdgeOffsetY), qtrWidth + outerEdgeOffset, height);
 }
 
-const drawSeats = (planeWidth, colCount, rowCount, seatSize) =>
+const drawSeats = (planeWidth, colCount, rowCount, seatSize, padding) =>
 {
-	const seatWidth = seatSize * colCount + 10;
-	const offsetFromLeft = (width - seatWidth) / 2;
+	const seatWidth = seatSize * colCount + padding * colCount - padding;
+	const leftOffset = (width - seatWidth) / 2;
 
 	stroke(0);
 	strokeWeight(1);
-	// rect((width - seatWidth) / 2, height / 2 - planeWidth / 2, seatWidth, planeWidth);
-	rect(0, height / 2 - planeWidth / 2, seatWidth, planeWidth);
+	rect(leftOffset, height / 2 - planeWidth / 2 + wallStrokeWeight / 2, seatWidth, planeWidth - wallStrokeWeight);
 	for (let i = 0; i < colCount; i++)
 	{
-		const x = i * seatSize;
+		const x = i * seatSize + leftOffset + (padding * i);
 		const y = height / 2 - planeWidth / 2 + wallStrokeWeight / 2;
 		square(x, y, seatSize);
 	}
@@ -56,5 +56,5 @@ function draw()
 
 	background('#e0e0e0');
 	drawPlaneOutline(planeWidth);
-	drawSeats(planeWidth, 16, 6, 30);
+	drawSeats(planeWidth, 16, 6, 30, 5);
 }
