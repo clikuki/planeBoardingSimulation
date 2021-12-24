@@ -28,37 +28,43 @@ const drawPlaneOutline = (planeWidth) =>
 	line(qtrWidth + innerEdgeOffsetX, halfHeight + (halfPlaneWidth + innerEdgeOffsetY), qtrWidth + outerEdgeOffset, height);
 }
 
-const drawSeats = (planeWidth, colCount, rowCount, colPadding, rowPadding, seatSize) =>
+const getSeats = (planeWidth, colCount, rowCount, colPadding, rowPadding, seatSize) =>
 {
 	const totalSeatWidth = seatSize * colCount + colPadding * colCount - colPadding;
 	const aisleWidth = planeWidth - rowCount * (seatSize + rowPadding);
 	const leftOffset = (width - totalSeatWidth) / 2;
 	const topOffset = height / 2 - planeWidth / 2 + wallStrokeWeight / 2;
+	const hexArr = ['#3391fe', '#2b5cc2'];
+	let curHexIndex = 0;
 
-	stroke(0);
-	strokeWeight(1);
-	// rect(leftOffset, height / 2 - planeWidth / 2 + wallStrokeWeight / 2, totalSeatWidth, planeWidth - wallStrokeWeight);
-	for (let x = leftOffset; x < totalSeatWidth + leftOffset; x += seatSize + colPadding)
+	return Array.from({ length: colCount }, (_, i) =>
 	{
-		for (let i = 0; i < rowCount; i++)
+		if (!(i % 4)) curHexIndex = (curHexIndex + 1) % 2;
+		const x = i * (seatSize + colPadding) + leftOffset;
+		const clr = color(hexArr[curHexIndex]);
+
+		return Array.from({ length: rowCount }, (_, j) =>
 		{
-			const y = i * (seatSize + rowPadding) + (i >= rowCount / 2 ? aisleWidth : 0) + topOffset;
-			square(x, y, seatSize);
-		}
-	}
+			const y = j * (seatSize + rowPadding) + (j >= rowCount / 2 ? aisleWidth - rowPadding : rowPadding) + topOffset;
+			return new Seat(x, y, seatSize, clr);
+		})
+	}).flat();
 }
 
-// P5 functions
+// P5 section
+const planeWidth = 250;
+let seats;
+
 function setup()
 {
 	createCanvas(900, 500);
+	seats = getSeats(planeWidth, 16, 6, 10, 5, 30);
 }
 
 function draw()
 {
-	const planeWidth = 250;
 
 	background('#e0e0e0');
 	drawPlaneOutline(planeWidth);
-	drawSeats(planeWidth, 16, 6, 10, 5, 30);
+	seats.forEach(seat => seat.draw());
 }
