@@ -28,19 +28,23 @@ const drawPlaneOutline = (planeWidth) =>
 	line(qtrWidth + innerEdgeOffsetX, halfHeight + (halfPlaneWidth + innerEdgeOffsetY), qtrWidth + outerEdgeOffset, height);
 }
 
-const drawSeats = (planeWidth, colCount, rowCount, seatSize, padding) =>
+const drawSeats = (planeWidth, colCount, rowCount, colPadding, rowPadding, seatSize) =>
 {
-	const seatWidth = seatSize * colCount + padding * colCount - padding;
-	const leftOffset = (width - seatWidth) / 2;
+	const totalSeatWidth = seatSize * colCount + colPadding * colCount - colPadding;
+	const aisleWidth = planeWidth - rowCount * (seatSize + rowPadding);
+	const leftOffset = (width - totalSeatWidth) / 2;
+	const topOffset = height / 2 - planeWidth / 2 + wallStrokeWeight / 2;
 
 	stroke(0);
 	strokeWeight(1);
-	rect(leftOffset, height / 2 - planeWidth / 2 + wallStrokeWeight / 2, seatWidth, planeWidth - wallStrokeWeight);
-	for (let i = 0; i < colCount; i++)
+	// rect(leftOffset, height / 2 - planeWidth / 2 + wallStrokeWeight / 2, totalSeatWidth, planeWidth - wallStrokeWeight);
+	for (let x = leftOffset; x < totalSeatWidth + leftOffset; x += seatSize + colPadding)
 	{
-		const x = i * seatSize + leftOffset + (padding * i);
-		const y = height / 2 - planeWidth / 2 + wallStrokeWeight / 2;
-		square(x, y, seatSize);
+		for (let i = 0; i < rowCount; i++)
+		{
+			const y = i * (seatSize + rowPadding) + (i >= rowCount / 2 ? aisleWidth : 0) + topOffset;
+			square(x, y, seatSize);
+		}
 	}
 }
 
@@ -52,9 +56,9 @@ function setup()
 
 function draw()
 {
-	const planeWidth = 300;
+	const planeWidth = 250;
 
 	background('#e0e0e0');
 	drawPlaneOutline(planeWidth);
-	drawSeats(planeWidth, 16, 6, 30, 5);
+	drawSeats(planeWidth, 16, 6, 10, 5, 30);
 }
