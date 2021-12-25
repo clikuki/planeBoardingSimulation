@@ -30,13 +30,18 @@ class Passenger
 		if (this.curStowTime > 0)
 		{
 			const alpha = this.curStowTime * (255 / this.stowTime);
+			const angle = (this.stowTime - this.curStowTime) * (PI / this.stowTime);
 			const baseY = this.y + 5 - (this.stowTime - this.curStowTime) * (this.r / this.stowTime);
 
+			push();
 			fill(139, 65, 0, alpha);
 			stroke(0, alpha);
 			strokeWeight(2);
-			rect(this.x - this.r * 2 + 10, baseY, this.r * 2 - 10, this.r - 2, 3);
-			line(this.x - this.r * 2 + 10, baseY + 3, this.x, baseY + 3)
+			translate(this.x - this.r + 5, baseY);
+			rotate(angle);
+			rect(this.r / -2, 0, this.r * 2 - 10, this.r - 2, 3);
+			line(this.r / -2, this.r / 5, this.r * 1.5 - 10, this.r / 5)
+			pop();
 		}
 	}
 
