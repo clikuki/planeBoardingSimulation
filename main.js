@@ -71,38 +71,57 @@ const getPassengers = (r, clr, seats) =>
 
 // P5 section
 const planeWidth = 250;
+let startTimestamp;
+let totalTime;
+let allSeated = false;
 let seats;
 let passengers;
 
 function setup()
 {
 	createCanvas(900, 500);
+	frameRate(30);
+	// seats = getSeats(planeWidth, 1, 1, 10, 5, 30);
 	seats = getSeats(planeWidth, 16, 6, 10, 5, 30);
 	passengers = getPassengers(15, color(255, 255, 0), seats);
+	startTimestamp = millis();
 }
 
 function draw()
 {
 	background('#e0e0e0');
 	drawPlaneOutline(planeWidth);
+
 	seats.forEach(seat => seat.draw());
+
+	let allSeatedTmp = true;
 	for (let i = passengers.length - 1; i >= 0; i--)
 	{
 		const passenger = passengers[i];
-
-		let passengerInWay = false;
-		for (let j = i + 1; j < passengers.length; j++)
-		{
-			const otherPassenger = passengers[j];
-			if (otherPassenger.y === passenger.y
-				&& passenger.x + passenger.r + 10 >= otherPassenger.x - otherPassenger.r)
-			{
-				passengerInWay = true;
-				break;
-			}
-		}
-
 		passenger.draw();
-		if (!passengerInWay) passenger.update();
+
+		if (!passenger.done)
+		{
+			allSeatedTmp = false;
+
+			const passengerInWay = passengers.slice(i + 1).some(otherPassenger =>
+			{
+				const sameY = otherPassenger.y === passenger.y;
+				const closeXDist = passenger.x + passenger.r + 10 >= otherPassenger.x - otherPassenger.r;
+				return sameY && closeXDist;
+			})
+
+			if (!passengerInWay) passenger.update();
+		}
 	}
+
+	if (!allSeated) totalTime = millis() - startTimestamp;
+
+	// Display time since start
+	noStroke();
+	fill(0);
+	textSize(48);
+	text((totalTime / 1000).toFixed(2), width / 2 - 50, height / 2 - planeWidth / 2 - wallStrokeWeight)
+
+	allSeated = allSeatedTmp;
 }
