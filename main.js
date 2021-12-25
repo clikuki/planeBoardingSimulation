@@ -58,9 +58,12 @@ const getPassengers = (r, clr, seats) =>
 	seats = seats.map(seat => seat);
 	while (seats.length)
 	{
-		const randIndex = Math.random() * (seats.length - 1);
-		const [seat] = seats.splice(randIndex, 1);
-		passengers.push(new Passenger(-r, height / 2, r, 3, clr, seat));
+		const index = Math.random() * (seats.length - 1);
+		const [seat] = seats.splice(index, 1);
+		const x = (-r * 2 - -15) * (passengers.length + 1);
+		const y = height / 2;
+		const stowTime = (Math.random() * 20) + 30;
+		passengers.unshift(new Passenger(x, y, r, stowTime, 3, clr, seat));
 	}
 
 	return passengers;
@@ -83,9 +86,23 @@ function draw()
 	background('#e0e0e0');
 	drawPlaneOutline(planeWidth);
 	seats.forEach(seat => seat.draw());
-	passengers.forEach(passenger =>
+	for (let i = passengers.length - 1; i >= 0; i--)
 	{
-		passenger.draw()
-		passenger.update();
-	});
+		const passenger = passengers[i];
+
+		let passengerInWay = false;
+		for (let j = i + 1; j < passengers.length; j++)
+		{
+			const otherPassenger = passengers[j];
+			if (otherPassenger.y === passenger.y
+				&& passenger.x + passenger.r + 10 >= otherPassenger.x - otherPassenger.r)
+			{
+				passengerInWay = true;
+				break;
+			}
+		}
+
+		passenger.draw();
+		if (!passengerInWay) passenger.update();
+	}
 }
