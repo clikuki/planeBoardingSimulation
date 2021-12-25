@@ -9,6 +9,7 @@ class Passenger
 		this.clr = clr;
 		this.seat = seat;
 		this.seatDirection = Math.sign(seat.y - y);
+		this.curStowTime = stowTime;
 		this.stowTime = stowTime;
 	}
 
@@ -26,13 +27,16 @@ class Passenger
 		point(this.x, this.y - this.r / 4);
 
 		// Bag
-		if (this.stowTime > 0)
+		if (this.curStowTime > 0)
 		{
-			fill('#8b4100');
+			const alpha = this.curStowTime * (255 / this.stowTime);
+			const baseY = this.y + 5 - (this.stowTime - this.curStowTime) * (this.r / this.stowTime);
+
+			fill(139, 65, 0, alpha);
+			stroke(0, alpha);
 			strokeWeight(2);
-			rect(this.x - this.r * 2 + 10, this.y + 5, this.r * 2 - 10, this.r - 2, 3);
-			strokeWeight(2);
-			line(this.x - this.r * 2 + 10, this.y + 8, this.x, this.y + 8)
+			rect(this.x - this.r * 2 + 10, baseY, this.r * 2 - 10, this.r - 2, 3);
+			line(this.x - this.r * 2 + 10, baseY + 3, this.x, baseY + 3)
 		}
 	}
 
@@ -42,9 +46,9 @@ class Passenger
 		if (this.x - this.r < this.seat.x) this.x += this.dx;
 		else
 		{
-			if (this.stowTime > 0)
+			if (this.curStowTime > 0)
 			{
-				--this.stowTime;
+				--this.curStowTime;
 				return;
 			}
 
