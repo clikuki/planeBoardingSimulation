@@ -5,7 +5,7 @@ class Passenger
 		this.x = x;
 		this.y = y;
 		this.r = r;
-		this.dx = d;
+		this.d = d;
 		this.clr = clr;
 		this.seat = seat;
 		this.seatDirection = Math.sign(seat.y - y);
@@ -48,10 +48,10 @@ class Passenger
 	update(delta)
 	{
 		if (this.done) return;
-		if (this.x - this.r < this.seat.x) this.x += (this.dx * delta / 60);
+		if (this.x - this.r < this.seat.x) this.x += (this.d * delta / 60);
 		else
 		{
-			this.x = this.seat.x + this.seat.s / 2
+			this.x = this.seat.x + this.seat.s / 2;
 
 			if (this.curStowTime > 0)
 			{
@@ -60,7 +60,7 @@ class Passenger
 			}
 
 			const sideY = this.y + (this.r * -this.seatDirection);
-			if (this.seatDirection < 0 ? sideY > this.seat.y + this.seat.s : sideY < this.seat.y) this.y += ((this.dx * this.seatDirection) * delta / 60);
+			if (this.seatDirection < 0 ? sideY > this.seat.y + this.seat.s : sideY < this.seat.y) this.y += ((this.d * this.seatDirection) * delta / 60);
 			else
 			{
 				this.done = true;
