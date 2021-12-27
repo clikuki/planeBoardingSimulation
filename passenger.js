@@ -1,5 +1,9 @@
 class Passenger
 {
+	#stowTime;
+	#curStowTime;
+	#seatDirection;
+
 	constructor(x, y, r, stowTime, d, clr, seat)
 	{
 		this.x = x;
@@ -8,9 +12,9 @@ class Passenger
 		this.d = d;
 		this.clr = clr;
 		this.seat = seat;
-		this.seatDirection = Math.sign(seat.y - y);
-		this.curStowTime = stowTime;
-		this.stowTime = stowTime;
+		this.#seatDirection = Math.sign(seat.y - y);
+		this.#curStowTime = stowTime;
+		this.#stowTime = stowTime;
 	}
 
 	draw()
@@ -27,11 +31,11 @@ class Passenger
 		point(this.x, this.y - this.r / 4);
 
 		// Bag
-		if (this.curStowTime > 0)
+		if (this.#curStowTime > 0)
 		{
-			const alpha = this.curStowTime * (255 / this.stowTime);
-			const angle = (this.stowTime - this.curStowTime) * (PI / this.stowTime);
-			const baseY = this.y + 5 - (this.stowTime - this.curStowTime) * (this.r / this.stowTime);
+			const alpha = this.#curStowTime * (255 / this.#stowTime);
+			const angle = (this.#stowTime - this.#curStowTime) * (PI / this.#stowTime);
+			const baseY = this.y + 5 - (this.#stowTime - this.#curStowTime) * (this.r / this.#stowTime);
 
 			push();
 			fill(139, 65, 0, alpha);
@@ -53,14 +57,14 @@ class Passenger
 		{
 			this.x = this.seat.x + this.seat.s / 2;
 
-			if (this.curStowTime > 0)
+			if (this.#curStowTime > 0)
 			{
-				this.curStowTime -= delta;
+				this.#curStowTime -= delta;
 				return;
 			}
 
-			const sideY = this.y + (this.r * -this.seatDirection);
-			if (this.seatDirection < 0 ? sideY > this.seat.y + this.seat.s : sideY < this.seat.y) this.y += ((this.d * this.seatDirection) * delta / 60);
+			const sideY = this.y + (this.r * -this.#seatDirection);
+			if (this.#seatDirection < 0 ? sideY > this.seat.y + this.seat.s : sideY < this.seat.y) this.y += ((this.d * this.#seatDirection) * delta / 60);
 			else
 			{
 				this.done = true;

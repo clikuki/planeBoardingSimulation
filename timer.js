@@ -1,22 +1,29 @@
-const timer = (() =>
+class Timer
 {
-	let startTimestamp;
-	let totalTime;
+	static #startTimestamp;
+	static #totalTime;
 
-	return {
-		get: () => totalTime,
-		update: () => totalTime = millis() - startTimestamp,
-		draw: () =>
-		{
-			noStroke();
-			fill(0);
-			textSize(48);
-			text((totalTime / 1000).toFixed(2), width / 2 - 50, height / 2 - planeWidth / 2 - wallStrokeWeight)
-		},
-		reset: () =>
-		{
-			startTimestamp = millis();
-			totalTime = 0;
-		},
+	static get()
+	{
+		return Timer.#totalTime
+	};
+
+	static update()
+	{
+		Timer.#totalTime = millis() - Timer.#startTimestamp
 	}
-})()
+
+	static draw()
+	{
+		noStroke();
+		fill(0);
+		textSize(48);
+		text((Timer.#totalTime / 1000).toFixed(2), width / 2 - 50, height / 2 - planeWidth / 2 - wallStrokeWeight)
+	}
+
+	static reset()
+	{
+		Timer.#startTimestamp = millis();
+		Timer.#totalTime = 0;
+	}
+}

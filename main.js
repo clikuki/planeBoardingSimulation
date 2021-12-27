@@ -108,7 +108,7 @@ function setup()
 	// seats = getSeats(planeWidth, 1, 1, 10, 5, 30);
 	seats = getSeats(planeWidth, 16, 6, 4, 5, 30);
 	passengers = getPassengers(15, 10, 1, 3, color(255, 255, 0), seats, 'back2Front');
-	timer.reset();
+	Timer.reset();
 }
 
 function draw()
@@ -139,8 +139,8 @@ function draw()
 		}
 	}
 
-	if (!allSeated) timer.update();
-	timer.draw();
+	if (!allSeated) Timer.update();
+	Timer.draw();
 
 	allSeated = allSeatedTmp;
 }
