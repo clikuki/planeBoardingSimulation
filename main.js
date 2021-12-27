@@ -72,7 +72,14 @@ const getPassengers = (r, d, minStowTime, maxStowTime, clr, seats, method) =>
 		let index;
 		switch (method)
 		{
-			case 'back2Front': {
+			case 'front2back': {
+				const groupSeatCount = seats.groupColCount * seats.rowCount;
+				const max = seatsArray.length % groupSeatCount || groupSeatCount;
+				index = Math.floor(Math.random() * max);
+			}
+				break;
+
+			case 'back2front': {
 				const groupSeatCount = seats.groupColCount * seats.rowCount;
 				const max = seatsArray.length % groupSeatCount || groupSeatCount;
 				const randNum = Math.floor(Math.random() * max);
@@ -107,7 +114,7 @@ function setup()
 	createCanvas(900, 500);
 	// seats = getSeats(planeWidth, 1, 1, 10, 5, 30);
 	seats = getSeats(planeWidth, 16, 6, 4, 5, 30);
-	passengers = getPassengers(15, 10, 1, 3, color(255, 255, 0), seats, 'back2Front');
+	passengers = getPassengers(15, 10, 1, 3, color(255, 255, 0), seats, 'front2back');
 	Timer.reset();
 }
 
