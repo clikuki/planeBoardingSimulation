@@ -45,20 +45,22 @@ class Passenger
 		}
 	}
 
-	update()
+	update(delta)
 	{
 		if (this.done) return;
-		if (this.x - this.r < this.seat.x) this.x += this.dx;
+		if (this.x - this.r < this.seat.x) this.x += (this.dx * delta / 60);
 		else
 		{
+			this.x = this.seat.x + this.seat.s / 2
+
 			if (this.curStowTime > 0)
 			{
-				--this.curStowTime;
+				this.curStowTime -= delta;
 				return;
 			}
 
 			const sideY = this.y + (this.r * -this.seatDirection);
-			if (this.seatDirection < 0 ? sideY > this.seat.y + this.seat.s : sideY < this.seat.y) this.y += this.dx * this.seatDirection;
+			if (this.seatDirection < 0 ? sideY > this.seat.y + this.seat.s : sideY < this.seat.y) this.y += ((this.dx * this.seatDirection) * delta / 60);
 			else
 			{
 				this.done = true;

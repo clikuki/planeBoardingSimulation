@@ -28,10 +28,11 @@ const drawPlaneOutline = (planeWidth) =>
 	line(qtrWidth + innerEdgeOffsetX, halfHeight + (halfPlaneWidth + innerEdgeOffsetY), qtrWidth + outerEdgeOffset, height);
 }
 
-const getSeats = (planeWidth, colCount, rowCount, colPadding, rowPadding, seatSize) =>
+const getSeats = (planeWidth, colCount, rowCount, padding, seatSize) =>
 {
+	const colPadding = padding * 2;
 	const totalSeatWidth = seatSize * colCount + colPadding * colCount - colPadding;
-	const aisleWidth = planeWidth - rowCount * (seatSize + rowPadding);
+	const aisleWidth = planeWidth - rowCount * (seatSize + padding);
 	const leftOffset = (width - totalSeatWidth) / 2;
 	const topOffset = height / 2 - planeWidth / 2 + wallStrokeWeight / 2;
 	const hexArr = ['#3391fe', '#2b5cc2'];
@@ -39,31 +40,38 @@ const getSeats = (planeWidth, colCount, rowCount, colPadding, rowPadding, seatSi
 
 	return Array.from({ length: colCount }, (_, i) =>
 	{
-		if (!(i % 4)) curHexIndex = (curHexIndex + 1) % 2;
+		if (!(i % 4)) curHexIndex = ++curHexIndex % 2;
 		const x = i * (seatSize + colPadding) + leftOffset;
 		const clr = color(hexArr[curHexIndex]);
 
 		return Array.from({ length: rowCount }, (_, j) =>
 		{
-			const y = j * (seatSize + rowPadding) + (j >= rowCount / 2 ? aisleWidth - rowPadding : rowPadding) + topOffset;
+			const y = j * (seatSize + padding) + (j >= rowCount / 2 ? aisleWidth - padding : padding) + topOffset;
 			return new Seat(x, y, seatSize, clr);
 		})
 	}).flat();
 }
 
-const getPassengers = (r, clr, seats) =>
+const getPassengers = (r, d, minStowTime, maxStowTime, clr, seats, method) =>
 {
 	const passengers = [];
 
+	// Make a copy of seats array
 	seats = seats.map(seat => seat);
-	while (seats.length)
+
+	switch (method)
 	{
-		const index = Math.random() * (seats.length - 1);
-		const [seat] = seats.splice(index, 1);
-		const x = (-r * 2 - -15) * (passengers.length + 1);
-		const y = height / 2;
-		const stowTime = (Math.random() * 20) + 30;
-		passengers.unshift(new Passenger(x, y, r, stowTime, 3, clr, seat));
+		case 'random':
+		default:
+			while (seats.length)
+			{
+				const index = Math.random() * (seats.length - 1);
+				const [seat] = seats.splice(index, 1);
+				const x = (-r * 2 - -15) * (passengers.length + 1);
+				const y = height / 2;
+				const stowTime = ((Math.random() * (maxStowTime - maxStowTime + 1)) + minStowTime) * 1000;
+				passengers.unshift(new Passenger(x, y, r, stowTime, d, clr, seat));
+			}
 	}
 
 	return passengers;
@@ -71,8 +79,6 @@ const getPassengers = (r, clr, seats) =>
 
 // P5 section
 const planeWidth = 250;
-let startTimestamp;
-let totalTime;
 let allSeated = false;
 let seats;
 let passengers;
@@ -80,11 +86,10 @@ let passengers;
 function setup()
 {
 	createCanvas(900, 500);
-	frameRate(30);
 	// seats = getSeats(planeWidth, 1, 1, 10, 5, 30);
-	seats = getSeats(planeWidth, 16, 6, 10, 5, 30);
-	passengers = getPassengers(15, color(255, 255, 0), seats);
-	startTimestamp = millis();
+	seats = getSeats(planeWidth, 16, 6, 5, 30);
+	passengers = getPassengers(15, 5, 1, 3, color(255, 255, 0), seats, 'random');
+	timer.reset();
 }
 
 function draw()
@@ -111,17 +116,12 @@ function draw()
 				return sameY && closeXDist;
 			})
 
-			if (!passengerInWay) passenger.update();
+			if (!passengerInWay) passenger.update(deltaTime);
 		}
 	}
 
-	if (!allSeated) totalTime = millis() - startTimestamp;
-
-	// Display time since start
-	noStroke();
-	fill(0);
-	textSize(48);
-	text((totalTime / 1000).toFixed(2), width / 2 - 50, height / 2 - planeWidth / 2 - wallStrokeWeight)
+	if (!allSeated) timer.update();
+	timer.draw();
 
 	allSeated = allSeatedTmp;
 }
