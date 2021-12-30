@@ -9,7 +9,14 @@
 		<script src="seat.js"></script>
 		<script src="passenger.js"></script>
 		<script src="timer.js"></script>
-		<script src="main.js"></script>
+		<script src="main.js" defer></script>
 	</head>
-	<body></body>
+	<body>
+		<label for="boardingMethod">Boarding method:</label>
+		<select id="boardingMethod" value="random">
+			<option value="front2back">Front-To-Back</option>
+			<option value="back2front">Back-To-Front</option>
+			<option value="random" selected>Random</option>
+		</select>
+	</body>
 </html>

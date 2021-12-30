@@ -101,8 +101,24 @@ const getPassengers = (r, d, minStowTime, maxStowTime, clr, seats, method) =>
 	return passengers;
 }
 
+const startSimulation = () =>
+{
+	allSeated = false;
+	seats = getSeats(planeWidth, 16, 6, 4, 5, 30);
+	passengers = getPassengers(15, 10, 1, 3, color(255, 255, 0), seats, method);
+	Timer.reset();
+}
+
+const boardingMethodOptions = document.querySelector('#boardingMethod');
+boardingMethodOptions.addEventListener('change', () =>
+{
+	method = boardingMethodOptions.value;
+	startSimulation();
+});
+
 // P5 section
 const planeWidth = 250;
+let method = boardingMethodOptions.value;
 let allSeated = false;
 let seats;
 let passengers;
@@ -110,10 +126,7 @@ let passengers;
 function setup()
 {
 	createCanvas(900, 500);
-	// seats = getSeats(planeWidth, 1, 1, 10, 5, 30);
-	seats = getSeats(planeWidth, 16, 6, 4, 5, 30);
-	passengers = getPassengers(15, 10, 1, 3, color(255, 255, 0), seats, 'back2front');
-	Timer.reset();
+	startSimulation();
 }
 
 function draw()
