@@ -18,7 +18,7 @@ class Timer
 		noStroke();
 		fill(0);
 		textSize(48);
-		text((Timer.#totalTime / 1000).toFixed(2), width / 2 - 50, height / 2 - planeWidth / 2 - wallStrokeWeight)
+		text((Timer.#totalTime / 1000).toFixed(2), width / 2 - 50, height / 2 - planeWidth / 4 * 3)
 	}
 
 	static reset()

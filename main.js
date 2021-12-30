@@ -1,5 +1,3 @@
-const wallStrokeWeight = 5;
-
 const drawPlaneOutline = (planeWidth) =>
 {
 	const halfHeight = height / 2;
@@ -11,7 +9,7 @@ const drawPlaneOutline = (planeWidth) =>
 
 	// draw walls
 	stroke(150);
-	strokeWeight(wallStrokeWeight);
+	strokeWeight(5);
 	line(0, halfHeight - halfPlaneWidth, width, halfHeight - halfPlaneWidth);
 	line(0, halfHeight + halfPlaneWidth, width, halfHeight + halfPlaneWidth);
 
@@ -34,7 +32,7 @@ const getSeats = (planeWidth, colCount, rowCount, groupColCount, padding, seatSi
 	const totalSeatWidth = seatSize * colCount + colPadding * colCount - colPadding;
 	const aisleWidth = planeWidth - rowCount * (seatSize + padding);
 	const leftOffset = (width - totalSeatWidth) / 2;
-	const topOffset = height / 2 - planeWidth / 2 + wallStrokeWeight / 2;
+	const topOffset = height / 2 - planeWidth / 2 + 2.5;
 	const hexArr = ['#3391fe', '#2b5cc2'];
 	let curHexIndex = 0;
 
@@ -114,7 +112,7 @@ function setup()
 	createCanvas(900, 500);
 	// seats = getSeats(planeWidth, 1, 1, 10, 5, 30);
 	seats = getSeats(planeWidth, 16, 6, 4, 5, 30);
-	passengers = getPassengers(15, 10, 1, 3, color(255, 255, 0), seats, 'front2back');
+	passengers = getPassengers(15, 10, 1, 3, color(255, 255, 0), seats, 'back2front');
 	Timer.reset();
 }
 
