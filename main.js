@@ -1,4 +1,17 @@
-const drawPlaneOutline = (planeWidth) =>
+const planeWidth = 260;
+let method = 'random';
+let allSeated = false;
+let seats;
+let passengers;
+
+const boardingMethodOptions = document.querySelector('#boardingMethod');
+boardingMethodOptions.addEventListener('change', () =>
+{
+	method = boardingMethodOptions.value;
+	startSimulation();
+});
+
+const drawPlaneOutline = () =>
 {
 	const halfHeight = height / 2;
 	const halfPlaneWidth = planeWidth / 2;
@@ -26,7 +39,7 @@ const drawPlaneOutline = (planeWidth) =>
 	line(qtrWidth + innerEdgeOffsetX, halfHeight + (halfPlaneWidth + innerEdgeOffsetY), qtrWidth + outerEdgeOffset, height);
 }
 
-const getSeats = (planeWidth, colCount, rowCount, groupColCount, padding, seatSize) =>
+const getSeats = (colCount, rowCount, groupColCount, padding, seatSize) =>
 {
 	const colPadding = padding * 2;
 	const totalSeatWidth = seatSize * colCount + colPadding * colCount - colPadding;
@@ -58,70 +71,59 @@ const getSeats = (planeWidth, colCount, rowCount, groupColCount, padding, seatSi
 	}
 }
 
-const getPassengers = (r, d, minStowTime, maxStowTime, clr, seats, method) =>
+const sortSeats = (seatsArray, method) =>
 {
-	const passengers = [];
-
-	// Make a copy of seats array
-	const seatsArray = seats.array.map(seat => seat);
-
-	while (seatsArray.length)
+	const result = [];
+	const copy = seatsArray.slice();
+	while (copy.length)
 	{
 		let index;
 		switch (method)
 		{
 			case 'front2back': {
 				const groupSeatCount = seats.groupColCount * seats.rowCount;
-				const max = seatsArray.length % groupSeatCount || groupSeatCount;
+				const max = result.length % groupSeatCount || groupSeatCount;
 				index = Math.floor(Math.random() * max);
 			}
 				break;
 
 			case 'back2front': {
 				const groupSeatCount = seats.groupColCount * seats.rowCount;
-				const max = seatsArray.length % groupSeatCount || groupSeatCount;
+				const max = result.length % groupSeatCount || groupSeatCount;
 				const randNum = Math.floor(Math.random() * max);
-				index = randNum + (seatsArray.length - max);
+				index = randNum + (result.length - max);
 			}
 				break;
 
 			case 'random':
 			default:
-				index = Math.floor(Math.random() * (seatsArray.length - 1));
+				index = Math.floor(Math.random() * (copy.length - 1));
 				break;
 		}
 
-		const [seat] = seatsArray.splice(index, 1);
-		const x = (-r * 2 - -15) * (passengers.length + 1);
-		const y = height / 2;
-		const stowTime = ((Math.random() * (maxStowTime - maxStowTime + 1)) + minStowTime) * 1000;
-		passengers.unshift(new Passenger(x, y, r, stowTime, d, clr, seat));
+		result.push(copy.splice(index, 1)[0]);
 	}
+	return result;
+}
 
-	return passengers;
+const getPassengers = (r, seats, method) =>
+{
+	const seatsArray = sortSeats(seats.array, method);
+	return seatsArray.map((seat, i) =>
+	{
+		const x = (-r * 2 + 15) * (i + 1);
+		const y = height / 2;
+		return new Passenger(x, y, r, seat);
+	}).reverse();
 }
 
 const startSimulation = () =>
 {
 	allSeated = false;
-	seats = getSeats(planeWidth, 16, 6, 4, 5, 30);
-	passengers = getPassengers(15, 10, 1, 3, color(255, 255, 0), seats, method);
+	seats = getSeats(16, 6, 4, 5, 30);
+	passengers = getPassengers(15, seats, method);
 	Timer.reset();
 }
-
-const boardingMethodOptions = document.querySelector('#boardingMethod');
-boardingMethodOptions.addEventListener('change', () =>
-{
-	method = boardingMethodOptions.value;
-	startSimulation();
-});
-
-// P5 section
-const planeWidth = 250;
-let method = boardingMethodOptions.value;
-let allSeated = false;
-let seats;
-let passengers;
 
 function setup()
 {
@@ -132,7 +134,7 @@ function setup()
 function draw()
 {
 	background('#e0e0e0');
-	drawPlaneOutline(planeWidth);
+	drawPlaneOutline();
 
 	seats.array.forEach(seat => seat.draw());
 

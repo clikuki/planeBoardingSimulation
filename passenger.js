@@ -4,17 +4,16 @@ class Passenger
 	#curStowTime;
 	#seatDirection;
 
-	constructor(x, y, r, stowTime, d, clr, seat)
+	constructor(x, y, r, seat)
 	{
 		this.x = x;
 		this.y = y;
 		this.r = r;
-		this.d = d;
-		this.clr = clr;
+		this.d = 10;
 		this.seat = seat;
 		this.#seatDirection = Math.sign(seat.y - y);
-		this.#curStowTime = stowTime;
-		this.#stowTime = stowTime;
+		this.#stowTime = getRandNum(1, 3);
+		this.#curStowTime = this.#stowTime;
 	}
 
 	draw()
@@ -22,7 +21,7 @@ class Passenger
 		// Body
 		stroke(0);
 		strokeWeight(2);
-		fill(this.clr);
+		fill('#FFFF00');
 		circle(this.x, this.y, this.r * 2);
 		strokeWeight(5);
 
@@ -52,7 +51,7 @@ class Passenger
 	update(delta)
 	{
 		if (this.done) return;
-		if (this.x - this.r < this.seat.x) this.x += (this.d * delta / 60);
+		if (this.x - this.r < this.seat.x) this.x += min(this.d * delta / 60, 30);
 		else
 		{
 			this.x = this.seat.x + this.seat.s / 2;
@@ -72,4 +71,10 @@ class Passenger
 			}
 		}
 	}
+}
+
+const getRandNum = (min, max) =>
+{
+	const ms = (Math.random() * (max - min + 1)) + min;
+	return ms * 1000;
 }
