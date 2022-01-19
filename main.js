@@ -150,7 +150,7 @@ function draw()
 			{
 				const sameY = otherPassenger.y === passenger.y;
 				const closeXDist = passenger.x + passenger.r + 10 >= otherPassenger.x - otherPassenger.r;
-				return sameY && closeXDist;
+				return !otherPassenger.done && sameY && closeXDist;
 			})
 
 			if (!passengerInWay) passenger.update(deltaTime);
