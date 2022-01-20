@@ -39,8 +39,11 @@ const drawPlaneOutline = () =>
 	line(qtrWidth + innerEdgeOffsetX, halfHeight + (halfPlaneWidth + innerEdgeOffsetY), qtrWidth + outerEdgeOffset, height);
 }
 
-const getSeats = (colCount, rowCount, groupColCount, padding, seatSize) =>
+const getSeats = (colCount, rowCount) =>
 {
+	const groupColCount = 4;
+	const padding = 5;
+	const seatSize = 30;
 	const colPadding = padding * 2;
 	const totalSeatWidth = seatSize * colCount + colPadding * colCount - colPadding;
 	const aisleWidth = planeWidth - rowCount * (seatSize + padding);
@@ -106,22 +109,17 @@ const sortSeats = (seatsArray, method) =>
 	return result;
 }
 
-const getPassengers = (r, seats, method) =>
+const getPassengers = (seats, method) =>
 {
 	const seatsArray = sortSeats(seats.array, method);
-	return seatsArray.map((seat, i) =>
-	{
-		const x = (-r * 2 + 15) * (i + 1);
-		const y = height / 2;
-		return new Passenger(x, y, r, seat);
-	}).reverse();
+	return seatsArray.map((seat, index) => new Passenger(index, seat)).reverse();
 }
 
 const startSimulation = () =>
 {
 	allSeated = false;
-	seats = getSeats(16, 6, 4, 5, 30);
-	passengers = getPassengers(15, seats, method);
+	seats = getSeats(16, 6);
+	passengers = getPassengers(seats, method);
 	Timer.reset();
 }
 

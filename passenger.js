@@ -4,14 +4,14 @@ class Passenger
 	#curStowTime;
 	#seatDirection;
 
-	constructor(x, y, r, seat)
+	constructor(index, seat)
 	{
-		this.x = x;
-		this.y = y;
-		this.r = r;
+		this.r = 15;
+		this.x = (-this.r * 2 + this.r) * (index + 1);
+		this.y = height / 2;
 		this.d = 10;
 		this.seat = seat;
-		this.#seatDirection = Math.sign(seat.y - y);
+		this.#seatDirection = Math.sign(seat.y - this.y);
 		this.#stowTime = getRandNum(1, 3);
 		this.#curStowTime = this.#stowTime;
 	}
