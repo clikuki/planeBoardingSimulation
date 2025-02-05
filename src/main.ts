@@ -54,6 +54,7 @@ const simul = (() => {
 	const passRadii = seatSize * 0.4;
 	const passGap = 8;
 	const stowDuration = 100;
+	const stowFinishWait = 20;
 	const passengers: Passenger[] = seats.map((s, i) => ({
 		x: -i * (passRadii * 2 + passGap),
 		y: 0,
@@ -68,8 +69,9 @@ const simul = (() => {
 		passRadii,
 		passSpeed,
 		passGap,
-		stowDuration,
 		passSeatSpeed,
+		stowDuration,
+		stowFinishWait,
 		passengers,
 	};
 })();
@@ -133,6 +135,7 @@ const art = (() => {
 	};
 })();
 
+// simul.passengers.length = 1;
 resetPassengers();
 randomPassengers();
 function update() {
@@ -140,16 +143,6 @@ function update() {
 	for (let i = 0; i < simul.passengers.length; i++) {
 		const curr = simul.passengers[i];
 		if (curr.y === curr.seat.y) continue;
-
-		// FIXME: Check for every passenger in front, not just index-wise
-		const ahead = simul.passengers[i - 1] ?? {
-			// Work-around for first passenger
-			x: Infinity,
-			y: Infinity,
-			stowTime: 0,
-		};
-		const aheadDist = Math.hypot(curr.x - ahead.x, curr.y - ahead.y);
-		const stowFinishWait = 10;
 
 		if (curr.x === curr.seat.x) {
 			// Shuffle into seat after stowing bag
@@ -159,10 +152,31 @@ function update() {
 				const USeatY = Math.abs(curr.seat.y);
 				curr.y = dir * Math.min(USelfY, USeatY);
 			}
-		} else if (aheadDist > passCenterDist) {
-			// Walk forward
+
+			continue;
+		}
+
+		// Get passenger in front
+		const ahead = simul.passengers.slice(0, i).reduce(
+			(best, pass) => {
+				if (Math.abs(pass.y) <= simul.passRadii && pass.x < best.x) {
+					return pass;
+				} else {
+					return best;
+				}
+			},
+			{
+				x: Infinity,
+				y: Infinity,
+				stowTime: -simul.stowFinishWait,
+			}
+		);
+		const aheadDist = Math.hypot(curr.x - ahead.x, curr.y - ahead.y);
+
+		// Walk forward if space in front is empty
+		if (aheadDist > passCenterDist) {
 			curr.x = Math.min(curr.x + simul.passSpeed, curr.seat.x);
-			if (ahead.stowTime > -stowFinishWait) {
+			if (ahead.stowTime > -simul.stowFinishWait) {
 				curr.x = Math.min(curr.x, ahead.x - passCenterDist);
 			}
 		}
