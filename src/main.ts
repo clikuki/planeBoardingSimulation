@@ -167,7 +167,50 @@ function clusterSeating(seatCluster = 1, reversed = false) {
 	}
 }
 
-clusterSeating(simul.colCnt * simul.rowSize * 4, true);
+// Window-Middle-Aisle
+function WMASeating(strict = false) {
+	if (simul.colCnt !== 2) return;
+
+	let rowOffset = 0;
+	let bag: number[] = [];
+
+	getColumnSet();
+	function getColumnSet() {
+		for (let i = 0; i < simul.colSize; i++) {
+			const bigRowIndex = i * simul.rowSize * 2;
+			bag.push(
+				bigRowIndex + rowOffset,
+				bigRowIndex + simul.rowSize * 2 - 1 - rowOffset
+			);
+		}
+
+		// Moves second column seats to the end of bag
+		if (strict) {
+			for (let i = 1; i <= bag.length / 2; i++) {
+				bag.push(bag.splice(i, 1)[0]);
+			}
+		}
+		console.log(bag.toString());
+	}
+
+	for (const pass of simul.passengers) {
+		// Random column OR back to front column
+		const bagIndex = strict ? bag.shift()! : randomItemInArray(bag);
+		pass.seat = simul.seats[bagIndex];
+		if (!strict)
+			bag.splice(
+				bag.findIndex((s) => s === bagIndex),
+				1
+			);
+
+		if (!bag.length) {
+			rowOffset++;
+			getColumnSet();
+		}
+	}
+}
+
+WMASeating();
 
 function update() {
 	const passCenterDist = simul.passRadii * 2 + simul.passGap;
