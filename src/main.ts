@@ -87,21 +87,19 @@ function draw() {
 	ctx.stroke(planeOutline);
 
 	// Seats
+	const seatGap = 2;
 	ctx.beginPath();
-	ctx.lineWidth = 5;
 	for (const { x, y } of seats) {
 		ctx.roundRect(
-			x - seatSize / 2 + 1 + ctx.lineWidth / 2 + 1,
-			y - seatSize / 2 + 1 + ctx.lineWidth / 2 + 1,
-			seatSize - ctx.lineWidth - 2,
-			seatSize - ctx.lineWidth - 2,
+			x - seatSize / 2 + seatGap,
+			y - seatSize / 2 + seatGap,
+			seatSize - seatGap * 2,
+			seatSize - seatGap * 2,
 			4
 		);
 	}
-	ctx.fillStyle = "#113";
-	ctx.strokeStyle = "#000";
+	ctx.fillStyle = "#226";
 	ctx.fill();
-	ctx.stroke();
 
 	// Seat ID
 	ctx.fillStyle = "#449";
