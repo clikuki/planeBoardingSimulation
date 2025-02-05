@@ -126,7 +126,7 @@ function resetPassengers() {
 	}
 }
 
-function randomPassengers() {
+function randomSeating() {
 	const seatBag = Array.from(simul.seats);
 	for (const pass of simul.passengers) {
 		const seat = randomItemInArray(seatBag);
@@ -138,12 +138,18 @@ function randomPassengers() {
 	}
 }
 
-function backToFront(seatCluster = 1) {
+function clusterSeating(seatCluster = 1, reversed = false) {
+	// Go either back-to-front or front-to-back
+	const seats = Array.from(simul.seats);
+	if (reversed) seats.reverse();
+
+	// Pick randomly from cluster
 	let clusterIndex = 0;
-	let cluster = simul.seats.slice(
+	let cluster = seats.slice(
 		clusterIndex * seatCluster,
 		(clusterIndex + 1) * seatCluster
 	);
+
 	for (const pass of simul.passengers) {
 		const seat = randomItemInArray(cluster);
 		pass.seat = seat;
@@ -153,7 +159,7 @@ function backToFront(seatCluster = 1) {
 		);
 
 		if (!cluster.length) {
-			cluster = simul.seats.slice(
+			cluster = seats.slice(
 				++clusterIndex * seatCluster,
 				(clusterIndex + 1) * seatCluster
 			);
@@ -161,10 +167,8 @@ function backToFront(seatCluster = 1) {
 	}
 }
 
-// simul.passengers.length = 1;
-resetPassengers();
-// randomPassengers();
-backToFront(simul.colCnt * simul.rowSize * 4);
+clusterSeating(simul.colCnt * simul.rowSize * 4, true);
+
 function update() {
 	const passCenterDist = simul.passRadii * 2 + simul.passGap;
 	for (let i = 0; i < simul.passengers.length; i++) {
