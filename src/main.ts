@@ -4,6 +4,11 @@ interface Seat {
 	x: number;
 	y: number;
 }
+interface Passenger {
+	x: number;
+	y: number;
+	seat: Seat;
+}
 
 const canvas = HTML.getOne<HTMLCanvasElement>("canvas")!;
 const ctx = canvas.getContext("2d")!;
@@ -43,10 +48,20 @@ const simul = (() => {
 			};
 		});
 
+	const passDiam = seatSize * 0.8;
+	const passengerRadii = passDiam / 2;
+	const passengers: Passenger[] = seats.map((s, i) => ({
+		x: -i * passDiam,
+		y: 0,
+		seat: s,
+	}));
+
 	return {
 		corridorSize,
 		seatSize,
 		seats,
+		passengerRadii,
+		passengers,
 	};
 })();
 
@@ -121,6 +136,25 @@ function draw() {
 	}
 	ctx.fillStyle = "#226";
 	ctx.fill();
+
+	// Passenger
+	ctx.beginPath();
+	for (const { x, y } of simul.passengers) {
+		ctx.ellipse(
+			x,
+			y,
+			simul.passengerRadii,
+			simul.passengerRadii,
+			0,
+			-Math.PI,
+			Math.PI
+		);
+	}
+	ctx.fillStyle = "#ffd32f";
+	ctx.strokeStyle = "#222";
+	ctx.lineWidth = 4;
+	ctx.fill();
+	ctx.stroke();
 
 	ctx.restore();
 }
