@@ -7,6 +7,7 @@ interface Seat {
 interface Passenger {
 	x: number;
 	y: number;
+	stowTime: number;
 	seat: Seat;
 }
 
@@ -48,11 +49,15 @@ const simul = (() => {
 			};
 		});
 
-	const passDiam = seatSize * 0.8;
-	const passengerRadii = passDiam / 2;
+	const passSpeed = 5;
+	const passSeatSpeed = 3;
+	const passRadii = seatSize * 0.4;
+	const passGap = 8;
+	const passStowDuration = 100;
 	const passengers: Passenger[] = seats.map((s, i) => ({
-		x: -i * passDiam,
+		x: -i * (passRadii * 2 + passGap),
 		y: 0,
+		stowTime: passStowDuration,
 		seat: s,
 	}));
 
@@ -60,7 +65,11 @@ const simul = (() => {
 		corridorSize,
 		seatSize,
 		seats,
-		passengerRadii,
+		passRadii,
+		passSpeed,
+		passGap,
+		passStowDuration,
+		passSeatSpeed,
 		passengers,
 	};
 })();
@@ -103,7 +112,38 @@ const art = (() => {
 	};
 })();
 
-function update() {}
+function update() {
+	const passCenterDist = simul.passRadii * 2 + simul.passGap;
+	for (let i = 0; i < simul.passengers.length; i++) {
+		const curr = simul.passengers[i];
+		if (curr.y === curr.seat.y) continue;
+
+		const ahead = simul.passengers[i - 1] ?? {
+			// Work-around for first passenger
+			x: Infinity,
+			y: Infinity,
+			stowTime: 0,
+		};
+		const aheadDist = Math.hypot(curr.x - ahead.x, curr.y - ahead.y);
+		const stowFinishWait = 10;
+
+		if (curr.x === curr.seat.x) {
+			// Shuffle into seat after stowing bag
+			if (--curr.stowTime <= 0) {
+				const dir = Math.sign(curr.seat.y);
+				const USelfY = Math.abs(curr.y) + simul.passSeatSpeed;
+				const USeatY = Math.abs(curr.seat.y);
+				curr.y = dir * Math.min(USelfY, USeatY);
+			}
+		} else if (aheadDist > passCenterDist) {
+			// Walk forward
+			curr.x = Math.min(curr.x + simul.passSpeed, curr.seat.x);
+			if (ahead.stowTime > -stowFinishWait) {
+				curr.x = Math.min(curr.x, ahead.x - passCenterDist);
+			}
+		}
+	}
+}
 
 function draw() {
 	// Clear screen
@@ -139,22 +179,31 @@ function draw() {
 
 	// Passenger
 	ctx.beginPath();
-	for (const { x, y } of simul.passengers) {
-		ctx.ellipse(
-			x,
-			y,
-			simul.passengerRadii,
-			simul.passengerRadii,
-			0,
-			-Math.PI,
-			Math.PI
-		);
+	for (const { x, y, stowTime } of simul.passengers) {
+		const bagX = x - simul.passRadii + 2;
+		const bagProg = (simul.passStowDuration - stowTime) / simul.passStowDuration;
+		const bagOffset = simul.passRadii * bagProg;
+		const bagY = y - bagOffset;
+
+		ctx.beginPath();
+		ctx.moveTo(x - simul.passRadii, y);
+		ctx.ellipse(x, y, simul.passRadii, simul.passRadii, 0, -Math.PI, Math.PI);
+		ctx.fillStyle = "#ffd32f";
+		ctx.strokeStyle = "#222";
+		ctx.lineWidth = 4;
+		ctx.fill();
+		ctx.stroke();
+
+		ctx.beginPath();
+		ctx.roundRect(bagX, bagY, simul.passRadii * 1.6 - 4, simul.passRadii, 2);
+
+		const opacity = (1 - bagProg).toString();
+		ctx.fillStyle = `rgba(150, 75, 0, ${opacity})`;
+		ctx.strokeStyle = `rgba(34,34,34,${opacity})`;
+		ctx.lineWidth = 2;
+		ctx.fill();
+		ctx.stroke();
 	}
-	ctx.fillStyle = "#ffd32f";
-	ctx.strokeStyle = "#222";
-	ctx.lineWidth = 4;
-	ctx.fill();
-	ctx.stroke();
 
 	ctx.restore();
 }
