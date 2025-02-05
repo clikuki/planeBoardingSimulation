@@ -190,7 +190,6 @@ function WMASeating(strict = false) {
 				bag.push(bag.splice(i, 1)[0]);
 			}
 		}
-		console.log(bag.toString());
 	}
 
 	for (const pass of simul.passengers) {
@@ -210,7 +209,43 @@ function WMASeating(strict = false) {
 	}
 }
 
-WMASeating();
+function steffenPerfect() {
+	if (simul.colCnt !== 2) return;
+
+	let rowOffset = 0;
+	let bag: number[] = [];
+
+	getColumnSet();
+	function getColumnSet() {
+		for (let i = 0; i < simul.colSize; i++) {
+			const bigRowIndex = i * simul.rowSize * 2;
+			bag.push(
+				bigRowIndex + rowOffset,
+				bigRowIndex + simul.rowSize * 2 - 1 - rowOffset
+			);
+		}
+
+		for (let i = 1; i <= bag.length / 2; i++) {
+			bag.push(bag.splice(i, 1)[0]);
+		}
+		for (let i = 0; i < bag.length / 2; i++) {
+			bag.push(bag.splice(i, 1)[0]);
+		}
+	}
+
+	for (const pass of simul.passengers) {
+		// Random column OR back to front column
+		const bagIndex = bag.shift()!;
+		pass.seat = simul.seats[bagIndex];
+
+		if (!bag.length) {
+			rowOffset++;
+			getColumnSet();
+		}
+	}
+}
+
+steffenPerfect();
 
 function update() {
 	const passCenterDist = simul.passRadii * 2 + simul.passGap;
