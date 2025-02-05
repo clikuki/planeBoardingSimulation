@@ -64,6 +64,9 @@ const simul = (() => {
 
 	return {
 		corridorSize,
+		rowSize,
+		colSize,
+		colCnt,
 		seatSize,
 		seats,
 		passRadii,
@@ -75,27 +78,6 @@ const simul = (() => {
 		passengers,
 	};
 })();
-
-function resetPassengers() {
-	for (let i = 0; i < simul.passengers.length; i++) {
-		const pass = simul.passengers[i];
-		pass.x = -i * (simul.passRadii * 2 + simul.passGap);
-		pass.y = 0;
-		pass.stowTime = simul.stowDuration;
-	}
-}
-
-function randomPassengers() {
-	const seatBag = Array.from(simul.seats);
-	for (const pass of simul.passengers) {
-		const seat = randomItemInArray(seatBag);
-		pass.seat = seat;
-		seatBag.splice(
-			seatBag.findIndex((s) => s === seat),
-			1
-		);
-	}
-}
 
 const art = (() => {
 	// Initialize drawing constants
@@ -135,9 +117,54 @@ const art = (() => {
 	};
 })();
 
+function resetPassengers() {
+	for (let i = 0; i < simul.passengers.length; i++) {
+		const pass = simul.passengers[i];
+		pass.x = -i * (simul.passRadii * 2 + simul.passGap);
+		pass.y = 0;
+		pass.stowTime = simul.stowDuration;
+	}
+}
+
+function randomPassengers() {
+	const seatBag = Array.from(simul.seats);
+	for (const pass of simul.passengers) {
+		const seat = randomItemInArray(seatBag);
+		pass.seat = seat;
+		seatBag.splice(
+			seatBag.findIndex((s) => s === seat),
+			1
+		);
+	}
+}
+
+function backToFront(seatCluster = 1) {
+	let clusterIndex = 0;
+	let cluster = simul.seats.slice(
+		clusterIndex * seatCluster,
+		(clusterIndex + 1) * seatCluster
+	);
+	for (const pass of simul.passengers) {
+		const seat = randomItemInArray(cluster);
+		pass.seat = seat;
+		cluster.splice(
+			cluster.findIndex((s) => s === seat),
+			1
+		);
+
+		if (!cluster.length) {
+			cluster = simul.seats.slice(
+				++clusterIndex * seatCluster,
+				(clusterIndex + 1) * seatCluster
+			);
+		}
+	}
+}
+
 // simul.passengers.length = 1;
 resetPassengers();
-randomPassengers();
+// randomPassengers();
+backToFront(simul.colCnt * simul.rowSize * 4);
 function update() {
 	const passCenterDist = simul.passRadii * 2 + simul.passGap;
 	for (let i = 0; i < simul.passengers.length; i++) {
