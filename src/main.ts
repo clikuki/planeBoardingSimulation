@@ -1,4 +1,4 @@
-import { HTML } from "./utils.js";
+import { HTML, randomItemInArray } from "./utils.js";
 
 interface Seat {
 	x: number;
@@ -53,11 +53,11 @@ const simul = (() => {
 	const passSeatSpeed = 3;
 	const passRadii = seatSize * 0.4;
 	const passGap = 8;
-	const passStowDuration = 100;
+	const stowDuration = 100;
 	const passengers: Passenger[] = seats.map((s, i) => ({
 		x: -i * (passRadii * 2 + passGap),
 		y: 0,
-		stowTime: passStowDuration,
+		stowTime: stowDuration,
 		seat: s,
 	}));
 
@@ -68,11 +68,32 @@ const simul = (() => {
 		passRadii,
 		passSpeed,
 		passGap,
-		passStowDuration,
+		stowDuration,
 		passSeatSpeed,
 		passengers,
 	};
 })();
+
+function resetPassengers() {
+	for (let i = 0; i < simul.passengers.length; i++) {
+		const pass = simul.passengers[i];
+		pass.x = -i * (simul.passRadii * 2 + simul.passGap);
+		pass.y = 0;
+		pass.stowTime = simul.stowDuration;
+	}
+}
+
+function randomPassengers() {
+	const seatBag = Array.from(simul.seats);
+	for (const pass of simul.passengers) {
+		const seat = randomItemInArray(seatBag);
+		pass.seat = seat;
+		seatBag.splice(
+			seatBag.findIndex((s) => s === seat),
+			1
+		);
+	}
+}
 
 const art = (() => {
 	// Initialize drawing constants
@@ -112,12 +133,15 @@ const art = (() => {
 	};
 })();
 
+resetPassengers();
+randomPassengers();
 function update() {
 	const passCenterDist = simul.passRadii * 2 + simul.passGap;
 	for (let i = 0; i < simul.passengers.length; i++) {
 		const curr = simul.passengers[i];
 		if (curr.y === curr.seat.y) continue;
 
+		// FIXME: Check for every passenger in front, not just index-wise
 		const ahead = simul.passengers[i - 1] ?? {
 			// Work-around for first passenger
 			x: Infinity,
@@ -181,7 +205,7 @@ function draw() {
 	ctx.beginPath();
 	for (const { x, y, stowTime } of simul.passengers) {
 		const bagX = x - simul.passRadii + 2;
-		const bagProg = (simul.passStowDuration - stowTime) / simul.passStowDuration;
+		const bagProg = (simul.stowDuration - stowTime) / simul.stowDuration;
 		const bagOffset = simul.passRadii * bagProg;
 		const bagY = y - bagOffset;
 
