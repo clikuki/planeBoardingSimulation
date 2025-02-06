@@ -252,61 +252,73 @@ function steffenPerfect() {
 // simul.passengers[3].seat = simul.seats.at(-6)!;
 randomSeating();
 
-function update() {
-	const passCenterDist = simul.passRadii * 2 + simul.passGap;
-	const emptyPassenger = {
-		x: Infinity,
-		y: Infinity,
-		stowTime: -simul.stowFinishWait,
-	};
-	for (let i = 0; i < simul.passengers.length; i++) {
-		const curr = simul.passengers[i];
-		if (curr.y === curr.seat.y) continue;
+const dummyPassenger: Passenger = Object.freeze({
+	x: Infinity,
+	y: Infinity,
+	stowTime: -simul.stowFinishWait,
+	seat: Object.freeze({ x: Infinity, y: Infinity }),
+});
 
-		if (curr.x === curr.seat.x) {
-			// Shuffle into seat after stowing bag
-			if (--curr.stowTime <= 0) {
-				const ahead = simul.passengers.slice(0, i).reduce((best, pass) => {
-					if (
-						pass.x === curr.x &&
-						Math.abs(pass.y - curr.y) < Math.abs(best.y - curr.y)
-					) {
-						return pass;
-					} else {
-						return best;
-					}
-				}, emptyPassenger);
+function findClosestPassenger(
+	comparator: (best: Passenger, pass: Passenger, current: Passenger) => boolean,
+	currentIndex: number
+): Passenger {
+	const current = simul.passengers[currentIndex];
+	return simul.passengers.slice(0, currentIndex).reduce((best, pass) => {
+		return comparator(best, pass, current) ? pass : best;
+	}, dummyPassenger);
+}
+const comparators = {
+	inAisle(b: Passenger, p: Passenger) {
+		return Math.abs(p.y) <= simul.passRadii * 2 && p.x < b.x;
+	},
+	inRow(b: Passenger, p: Passenger, c: Passenger) {
+		return p.x === c.x && Math.abs(p.y - c.y) < Math.abs(b.y - c.y);
+	},
+};
 
-				let speed = simul.passSeatSpeed;
-				const aheadDist = Math.hypot(curr.x - ahead.x, curr.y - ahead.y);
-				if (aheadDist <= simul.passRadii) speed *= 0.6;
+function movePassenger(index: number) {
+	// Skip if passenger is already at its seat
+	const current = simul.passengers[index];
+	if (current.y === current.seat.y) return;
 
-				const dir = Math.sign(curr.seat.y);
-				const USelfY = Math.abs(curr.y) + speed;
-				const USeatY = Math.abs(curr.seat.y);
-				curr.y = dir * Math.min(USelfY, USeatY);
+	if (current.x === current.seat.x) {
+		// Passenger is in the correct row; handle stowing and seating
+		if (--current.stowTime <= 0) {
+			const ahead = findClosestPassenger(comparators.inRow, index);
+			const distanceAhead = Math.hypot(current.x - ahead.x, current.y - ahead.y);
+
+			// Slow down if moving over another passenger
+			let speed = simul.passSeatSpeed;
+			if (distanceAhead <= simul.passRadii) {
+				speed *= 0.6;
 			}
 
-			continue;
+			// Move closer to the seat, but not past it
+			const dir = Math.sign(current.seat.y);
+			current.y =
+				dir * Math.min(Math.abs(current.y) + speed, Math.abs(current.seat.y));
 		}
+	} else {
+		// Passenger is still walking down the corridor
+		const ahead = findClosestPassenger(comparators.inAisle, index);
+		const distanceAhead = Math.hypot(current.x - ahead.x, current.y - ahead.y);
 
-		// Get passenger in front
-		const ahead = simul.passengers.slice(0, i).reduce((best, pass) => {
-			if (Math.abs(pass.y) <= simul.passRadii && pass.x < best.x) {
-				return pass;
-			} else {
-				return best;
-			}
-		}, emptyPassenger);
-		const aheadDist = Math.hypot(curr.x - ahead.x, curr.y - ahead.y);
-
-		// Walk forward if space in front is empty
-		if (aheadDist > passCenterDist) {
-			curr.x = Math.min(curr.x + simul.passSpeed, curr.seat.x);
+		// Only move forward if there is enough space ahead
+		const minimumDistance = simul.passRadii * 2 + simul.passGap;
+		if (distanceAhead > minimumDistance) {
+			current.x = Math.min(current.x + simul.passSpeed, current.seat.x);
+			// If the passenger ahead is stowing, don't get too close
 			if (ahead.stowTime > -simul.stowFinishWait) {
-				curr.x = Math.min(curr.x, ahead.x - passCenterDist);
+				current.x = Math.min(current.x, ahead.x - minimumDistance);
 			}
 		}
+	}
+}
+
+function update() {
+	for (let i = 0; i < simul.passengers.length; i++) {
+		movePassenger(i);
 	}
 }
 
