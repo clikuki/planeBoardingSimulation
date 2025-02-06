@@ -1,4 +1,4 @@
-import { HTML, randomItemInArray } from "./utils.js";
+import { HTML } from "./utils.js";
 
 interface Seat {
 	x: number;
@@ -129,37 +129,30 @@ function resetPassengers() {
 function randomSeating() {
 	const seatBag = Array.from(simul.seats);
 	for (const pass of simul.passengers) {
-		const seat = randomItemInArray(seatBag);
-		pass.seat = seat;
-		seatBag.splice(
-			seatBag.findIndex((s) => s === seat),
-			1
-		);
+		const bagIndex = Math.floor(Math.random() * seatBag.length);
+		pass.seat = seatBag.splice(bagIndex, 1)[0];
 	}
 }
 
 function clusterSeating(seatCluster = 1, reversed = false) {
 	// Go either back-to-front or front-to-back
-	const seats = Array.from(simul.seats);
-	if (reversed) seats.reverse();
+	const fullSeats = Array.from(simul.seats);
+	if (reversed) fullSeats.reverse();
 
-	// Pick randomly from cluster
 	let clusterIndex = 0;
-	let cluster = seats.slice(
+	let seatBag = fullSeats.slice(
 		clusterIndex * seatCluster,
 		(clusterIndex + 1) * seatCluster
 	);
 
 	for (const pass of simul.passengers) {
-		const seat = randomItemInArray(cluster);
-		pass.seat = seat;
-		cluster.splice(
-			cluster.findIndex((s) => s === seat),
-			1
-		);
+		// Pick randomly from cluster
+		const bagIndex = Math.floor(Math.random() * fullSeats.length);
+		pass.seat = seatBag.splice(bagIndex, 1)[0];
 
-		if (!cluster.length) {
-			cluster = seats.slice(
+		if (!seatBag.length) {
+			// Build next cluster
+			seatBag = fullSeats.slice(
 				++clusterIndex * seatCluster,
 				(clusterIndex + 1) * seatCluster
 			);
@@ -167,78 +160,76 @@ function clusterSeating(seatCluster = 1, reversed = false) {
 	}
 }
 
-// Window-Middle-Aisle
-function WMASeating(strict = false) {
-	if (simul.colCnt !== 2) return;
+function WindowMiddleAisleSeating(strict = false) {
+	if (simul.colCnt !== 2) throw Error("Only works in 2-column seatings!");
 
-	let rowOffset = 0;
-	let bag: number[] = [];
+	let rowOffset = 0; // Track win-mid-aisle progress
+	let indexBag: number[] = [];
 
 	getColumnSet();
 	function getColumnSet() {
+		// Get subcolumn seat indices of both columns
 		for (let i = 0; i < simul.colSize; i++) {
 			const bigRowIndex = i * simul.rowSize * 2;
-			bag.push(
+			indexBag.push(
+				// Go outside-in
 				bigRowIndex + rowOffset,
 				bigRowIndex + simul.rowSize * 2 - 1 - rowOffset
 			);
 		}
 
-		// Moves second column seats to the end of bag
 		if (strict) {
-			for (let i = 1; i <= bag.length / 2; i++) {
-				bag.push(bag.splice(i, 1)[0]);
+			// Move second column seats to the end of bag
+			for (let i = 1; i <= indexBag.length / 2; i++) {
+				indexBag.push(indexBag.splice(i, 1)[0]);
 			}
 		}
 	}
 
 	for (const pass of simul.passengers) {
-		// Random column OR back to front column
-		const bagIndex = strict ? bag.shift()! : randomItemInArray(bag);
-		pass.seat = simul.seats[bagIndex];
-		if (!strict)
-			bag.splice(
-				bag.findIndex((s) => s === bagIndex),
-				1
-			);
+		// Random column OR perfect back2front column
+		const bagIndex = strict ? 0 : Math.floor(Math.random() * indexBag.length);
+		pass.seat = simul.seats[indexBag.splice(bagIndex, 1)[0]];
 
-		if (!bag.length) {
+		if (!indexBag.length) {
 			rowOffset++;
 			getColumnSet();
 		}
 	}
 }
 
-function steffenPerfect() {
-	if (simul.colCnt !== 2) return;
+function steffenSeating() {
+	if (simul.colCnt !== 2) throw Error("Only works in 2-column seatings!");
 
-	let rowOffset = 0;
-	let bag: number[] = [];
+	let rowOffset = 0; // Track win-mid-aisle progress
+	let indexBag: number[] = [];
 
 	getColumnSet();
 	function getColumnSet() {
+		// Get subcolumn seat indices of both columns
 		for (let i = 0; i < simul.colSize; i++) {
 			const bigRowIndex = i * simul.rowSize * 2;
-			bag.push(
+			indexBag.push(
+				// Go outside-in
 				bigRowIndex + rowOffset,
 				bigRowIndex + simul.rowSize * 2 - 1 - rowOffset
 			);
 		}
 
-		for (let i = 1; i <= bag.length / 2; i++) {
-			bag.push(bag.splice(i, 1)[0]);
+		// Push every other item to back twice
+		for (let i = 1; i <= indexBag.length / 2; i++) {
+			indexBag.push(indexBag.splice(i, 1)[0]);
 		}
-		for (let i = 0; i < bag.length / 2; i++) {
-			bag.push(bag.splice(i, 1)[0]);
+		for (let i = 0; i < indexBag.length / 2; i++) {
+			indexBag.push(indexBag.splice(i, 1)[0]);
 		}
 	}
 
 	for (const pass of simul.passengers) {
-		// Random column OR back to front column
-		const bagIndex = bag.shift()!;
+		const bagIndex = indexBag.shift()!;
 		pass.seat = simul.seats[bagIndex];
 
-		if (!bag.length) {
+		if (!indexBag.length) {
 			rowOffset++;
 			getColumnSet();
 		}
@@ -250,7 +241,7 @@ function steffenPerfect() {
 // simul.passengers[1].seat = simul.seats.at(-2)!;
 // simul.passengers[2].seat = simul.seats.at(-12)!;
 // simul.passengers[3].seat = simul.seats.at(-6)!;
-randomSeating();
+WindowMiddleAisleSeating();
 
 const dummyPassenger: Passenger = Object.freeze({
 	x: Infinity,
