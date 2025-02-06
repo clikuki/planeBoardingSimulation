@@ -76,6 +76,8 @@ const simul = (() => {
 		stowDuration,
 		stowFinishWait,
 		passengers,
+		iterationCounter: 0,
+		iterationElem: HTML.getOne(".iterCnt")!,
 	};
 })();
 
@@ -147,7 +149,7 @@ function clusterSeating(seatCluster = 1, reversed = false) {
 
 	for (const pass of simul.passengers) {
 		// Pick randomly from cluster
-		const bagIndex = Math.floor(Math.random() * fullSeats.length);
+		const bagIndex = Math.floor(Math.random() * seatBag.length);
 		pass.seat = seatBag.splice(bagIndex, 1)[0];
 
 		if (!seatBag.length) {
@@ -236,13 +238,6 @@ function steffenSeating() {
 	}
 }
 
-// simul.passengers.length = 4;
-// simul.passengers[0].seat = simul.seats.at(-3)!;
-// simul.passengers[1].seat = simul.seats.at(-2)!;
-// simul.passengers[2].seat = simul.seats.at(-12)!;
-// simul.passengers[3].seat = simul.seats.at(-6)!;
-WindowMiddleAisleSeating();
-
 const dummyPassenger: Passenger = Object.freeze({
 	x: Infinity,
 	y: Infinity,
@@ -271,7 +266,7 @@ const comparators = {
 function movePassenger(index: number) {
 	// Skip if passenger is already at its seat
 	const current = simul.passengers[index];
-	if (current.y === current.seat.y) return;
+	if (current.y === current.seat.y) return false;
 
 	if (current.x === current.seat.x) {
 		// Passenger is in the correct row; handle stowing and seating
@@ -305,15 +300,65 @@ function movePassenger(index: number) {
 			}
 		}
 	}
+
+	return true;
 }
 
-function update() {
-	for (let i = 0; i < simul.passengers.length; i++) {
-		movePassenger(i);
+(() => {
+	const restartBtn = HTML.getOne<HTMLButtonElement>(".restart")!;
+	const fastForwardBtn = HTML.getOne<HTMLButtonElement>(".ffd")!;
+	const seatingSelection = HTML.getOne<HTMLSelectElement>(".seating")!;
+	seatingSelection.value = "random";
+
+	restart();
+	function restart() {
+		simul.iterationCounter = 0;
+		resetPassengers();
+
+		// Run seating algorithm
+		const value = seatingSelection.value;
+		if (value === "random") {
+			randomSeating();
+		} else if (value === "b2f") {
+			clusterSeating(simul.colCnt * simul.rowSize * 4);
+		} else if (value === "f2b") {
+			clusterSeating(simul.colCnt * simul.rowSize * 4, true);
+		} else if (value === "wma") {
+			WindowMiddleAisleSeating();
+		} else if (value === "wmab2f") {
+			WindowMiddleAisleSeating(true);
+		} else if (value === "steffen") {
+			steffenSeating();
+		}
 	}
+
+	restartBtn.addEventListener("click", restart);
+	seatingSelection.addEventListener("change", restart);
+	fastForwardBtn.addEventListener("click", () => {
+		while (true) {
+			let passengerMoved = false;
+			for (let i = 0; i < simul.passengers.length; i++) {
+				passengerMoved = movePassenger(i) || passengerMoved;
+			}
+
+			if (passengerMoved) simul.iterationCounter++;
+			else break;
+		}
+	});
+})();
+
+function update() {
+	let passengerMoved = false;
+	for (let i = 0; i < simul.passengers.length; i++) {
+		passengerMoved = movePassenger(i) || passengerMoved;
+	}
+
+	if (passengerMoved) simul.iterationCounter++;
 }
 
 function draw() {
+	simul.iterationElem.textContent = simul.iterationCounter.toString();
+
 	// Clear screen
 	ctx.fillStyle = "#112";
 	ctx.fillRect(0, 0, canvas.width, canvas.height);

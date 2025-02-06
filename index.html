@@ -8,6 +8,23 @@
 		<script src="dest/main.js" type="module"></script>
 	</head>
 	<body>
+		<section class="ui">
+			<label for="seating">Seating Arrangement :&nbsp;</label>
+			<select id="seating" class="seating arrangement">
+				<option value="random">Random</option>
+				<option value="b2f">Back to Front</option>
+				<option value="f2b">Front to Back</option>
+				<option value="wma">WILMA</option>
+				<option value="wmab2f">WILMA Back to Front</option>
+				<option value="steffen">Steffen</option>
+			</select>
+			<button class="restart">Restart</button>
+			<button class="ffd">Fast Forward</button>
+			<div class="iterationCounter">
+				<span>ITERATIONS</span>
+				<span class="iterCnt"></span>
+			</div>
+		</section>
 		<canvas></canvas>
 	</body>
 </html>
