@@ -245,10 +245,20 @@ function steffenPerfect() {
 	}
 }
 
-steffenPerfect();
+// simul.passengers.length = 4;
+// simul.passengers[0].seat = simul.seats.at(-3)!;
+// simul.passengers[1].seat = simul.seats.at(-2)!;
+// simul.passengers[2].seat = simul.seats.at(-12)!;
+// simul.passengers[3].seat = simul.seats.at(-6)!;
+randomSeating();
 
 function update() {
 	const passCenterDist = simul.passRadii * 2 + simul.passGap;
+	const emptyPassenger = {
+		x: Infinity,
+		y: Infinity,
+		stowTime: -simul.stowFinishWait,
+	};
 	for (let i = 0; i < simul.passengers.length; i++) {
 		const curr = simul.passengers[i];
 		if (curr.y === curr.seat.y) continue;
@@ -256,8 +266,23 @@ function update() {
 		if (curr.x === curr.seat.x) {
 			// Shuffle into seat after stowing bag
 			if (--curr.stowTime <= 0) {
+				const ahead = simul.passengers.slice(0, i).reduce((best, pass) => {
+					if (
+						pass.x === curr.x &&
+						Math.abs(pass.y - curr.y) < Math.abs(best.y - curr.y)
+					) {
+						return pass;
+					} else {
+						return best;
+					}
+				}, emptyPassenger);
+
+				let speed = simul.passSeatSpeed;
+				const aheadDist = Math.hypot(curr.x - ahead.x, curr.y - ahead.y);
+				if (aheadDist <= simul.passRadii) speed *= 0.6;
+
 				const dir = Math.sign(curr.seat.y);
-				const USelfY = Math.abs(curr.y) + simul.passSeatSpeed;
+				const USelfY = Math.abs(curr.y) + speed;
 				const USeatY = Math.abs(curr.seat.y);
 				curr.y = dir * Math.min(USelfY, USeatY);
 			}
@@ -266,20 +291,13 @@ function update() {
 		}
 
 		// Get passenger in front
-		const ahead = simul.passengers.slice(0, i).reduce(
-			(best, pass) => {
-				if (Math.abs(pass.y) <= simul.passRadii && pass.x < best.x) {
-					return pass;
-				} else {
-					return best;
-				}
-			},
-			{
-				x: Infinity,
-				y: Infinity,
-				stowTime: -simul.stowFinishWait,
+		const ahead = simul.passengers.slice(0, i).reduce((best, pass) => {
+			if (Math.abs(pass.y) <= simul.passRadii && pass.x < best.x) {
+				return pass;
+			} else {
+				return best;
 			}
-		);
+		}, emptyPassenger);
 		const aheadDist = Math.hypot(curr.x - ahead.x, curr.y - ahead.y);
 
 		// Walk forward if space in front is empty
