@@ -377,19 +377,42 @@ function draw() {
 	ctx.stroke(art.planeOutline);
 
 	// Seats
-	const seatGap = 2;
-	ctx.beginPath();
+	ctx.lineWidth = 5;
+	ctx.strokeStyle = "#111";
+	ctx.lineCap = "round";
+	const seatGap = 3;
+	const trueSeatSize = simul.seatSize - seatGap * 2 - ctx.lineWidth;
+	let seatCount = 0;
 	for (const { x, y } of simul.seats) {
+		const subindex = Math.floor(seatCount++ / simul.colCnt / simul.rowSize);
+		if (subindex % 2 === 0) {
+			ctx.fillStyle = "#38f";
+		} else {
+			ctx.fillStyle = "#36d";
+		}
+
+		ctx.beginPath();
 		ctx.roundRect(
-			x - simul.seatSize / 2 + seatGap,
-			y - simul.seatSize / 2 + seatGap,
-			simul.seatSize - seatGap * 2,
-			simul.seatSize - seatGap * 2,
+			x + 5 - simul.seatSize / 2 + seatGap + ctx.lineWidth / 2,
+			y + 5 - simul.seatSize / 2 + seatGap + ctx.lineWidth / 2,
+			trueSeatSize,
+			trueSeatSize,
 			4
 		);
+		ctx.fill();
+		ctx.stroke();
+
+		ctx.beginPath();
+		ctx.roundRect(
+			x + simul.seatSize / 2 - 8,
+			y - simul.seatSize / 2 + 7,
+			15,
+			simul.seatSize * 0.8,
+			4
+		);
+		ctx.fill();
+		ctx.stroke();
 	}
-	ctx.fillStyle = "#226";
-	ctx.fill();
 
 	// Passenger
 	ctx.beginPath();
@@ -417,7 +440,7 @@ function draw() {
 		ctx.restore();
 
 		ctx.fillStyle = "#ffd32f";
-		ctx.strokeStyle = "#222";
+		ctx.strokeStyle = "#111";
 		ctx.lineCap = "round";
 		ctx.lineWidth = 4;
 		ctx.fill();
