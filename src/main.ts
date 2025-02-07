@@ -20,6 +20,7 @@ canvas.height = innerHeight;
 
 const simul = (() => {
 	// Initialize data
+	// TODO: on startup, scale numbers to fit viewport
 	const seatSize = 68;
 	const rowByRowPad = 20;
 	const columnEdgePad = 15;
@@ -91,9 +92,7 @@ const art = (() => {
 			canvas.width - 1000,
 			side * (simul.corridorSize / 2 + 80)
 		);
-		planeOutline.lineTo(canvas.width - 900, side * (canvas.height / 2 + 10));
-
-		planeOutline.moveTo(canvas.width - 300, side * (canvas.height / 2 + 10));
+		planeOutline.lineTo(canvas.width - 100, side * (canvas.height * 2));
 		planeOutline.lineTo(canvas.width - 330, side * (simul.corridorSize / 2));
 
 		const sideHeights = (side * simul.corridorSize) / 2;
@@ -356,7 +355,6 @@ function update() {
 	if (passengerMoved) simul.iterationCounter++;
 }
 
-simul.passengers.length = 1;
 function draw() {
 	simul.iterationElem.textContent = simul.iterationCounter.toString();
 
