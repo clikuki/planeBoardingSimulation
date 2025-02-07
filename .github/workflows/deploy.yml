@@ -1,0 +1,41 @@
+name: Transpile and push to gh-pages
+
+on:
+ push:
+  branches:
+   - main
+
+jobs:
+ build-deploy:
+  runs-on: ubuntu-22.04
+
+  steps:
+   - name: Checkout
+     uses: actions/checkout@v4
+
+   - name: Setup Node 20
+     uses: actions/setup-node@v4
+     with:
+      node-version: "20"
+
+   - name: Cache
+     uses: actions/cache@v4
+     with:
+      path: ~/.npm
+      key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+      restore-keys: |
+       ${{ runner.os }}-node-
+
+   - run: npm ci
+   - run: npm run build
+
+   - name: Fix .gitignore
+     run: printf "node_modules\nsrc\n*.json\n*.yaml" > .gitignore
+
+   - name: Deploy to gh-pages
+     uses: peaceiris/actions-gh-pages@v4
+     with:
+      github_token: ${{ secrets.GITHUB_TOKEN }}
+      publish_dir: ./
+      allow_empty_commit: true
+      force_orphan: true
