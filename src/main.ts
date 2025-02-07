@@ -356,6 +356,7 @@ function update() {
 	if (passengerMoved) simul.iterationCounter++;
 }
 
+simul.passengers.length = 1;
 function draw() {
 	simul.iterationElem.textContent = simul.iterationCounter.toString();
 
@@ -393,22 +394,61 @@ function draw() {
 	// Passenger
 	ctx.beginPath();
 	for (const { x, y, stowTime } of simul.passengers) {
-		const bagX = x - simul.passRadii + 2;
-		const bagProg = (simul.stowDuration - stowTime) / simul.stowDuration;
-		const bagOffset = simul.passRadii * bagProg;
-		const bagY = y - bagOffset;
-
+		// Body
 		ctx.beginPath();
 		ctx.moveTo(x - simul.passRadii, y);
 		ctx.ellipse(x, y, simul.passRadii, simul.passRadii, 0, -Math.PI, Math.PI);
+
+		// Face
+		ctx.save();
+		ctx.translate(x, y);
+		let side = y === 0 ? 1 : -1;
+		let eyeY = -simul.passRadii * 0.2;
+		let mouthY = simul.passRadii * 0.6;
+		let mouthX = Math.sqrt(simul.passRadii ** 2 - mouthY ** 2) * side;
+
+		ctx.moveTo(mouthX, mouthY);
+		ctx.lineTo(0, mouthY);
+
+		ctx.moveTo(0, eyeY);
+		ctx.ellipse(0, eyeY, 2, 2, 0, 0, Math.PI * 2);
+		ctx.moveTo(mouthX, eyeY);
+		ctx.ellipse(mouthX, eyeY, 2, 2, 0, 0, Math.PI * 2);
+		ctx.restore();
+
 		ctx.fillStyle = "#ffd32f";
 		ctx.strokeStyle = "#222";
+		ctx.lineCap = "round";
 		ctx.lineWidth = 4;
 		ctx.fill();
 		ctx.stroke();
 
+		// Bag
 		ctx.beginPath();
-		ctx.roundRect(bagX, bagY, simul.passRadii * 1.6 - 4, simul.passRadii, 2);
+
+		const bagProg = (simul.stowDuration - stowTime) / simul.stowDuration;
+		const bagOffset = simul.passRadii * bagProg;
+		const bagX = x - simul.passRadii * (3 / 2);
+		const bagY = y + 6 - bagOffset;
+		const bagWidth = simul.passRadii * 1.6 - 4;
+		const bagHeight = simul.passRadii;
+		ctx.save();
+		ctx.translate(bagX + bagWidth / 2, bagY);
+		ctx.rotate(Math.PI * bagProg);
+
+		// Case
+		ctx.roundRect(-bagWidth / 2, 0, bagWidth, bagHeight, 2);
+
+		// Pocket
+		ctx.moveTo(-bagWidth / 2 + 5, 5);
+		ctx.lineTo(bagWidth / 2 - 5, 5);
+
+		// Handle
+		ctx.moveTo(-8, 2);
+		ctx.lineTo(-6, -3);
+		ctx.lineTo(6, -3);
+		ctx.lineTo(8, 2);
+		ctx.restore();
 
 		const opacity = (1 - bagProg).toString();
 		ctx.fillStyle = `rgba(150, 75, 0, ${opacity})`;
