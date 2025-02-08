@@ -21,39 +21,41 @@ canvas.height = innerHeight;
 const simul = (() => {
 	// Initialize data
 	// TODO: on startup, scale numbers to fit viewport
-	const seatSize = 68;
+
+	const corridorSize = canvas.height * 0.55;
+	const rowCnt = 3; // Num of side by side seats
+	const colCnt = 16; // Num of rows of seats
+	const colSetCnt = 2; // Number of seating columns
 	const rowByRowPad = 20;
 	const columnEdgePad = 15;
 	const backSpace = 100;
+	const seatGap = 3;
+	const seatSize = canvas.height * 0.068;
 
-	const rowSize = 3; // Num of side by side seats
-	const colSize = 16; // Num of rows of seats
-	const colCnt = 2; // Number of seating columns
-
-	const corridorSize = canvas.height * 0.5;
-
-	const rowSizePx = seatSize * rowSize + columnEdgePad * 2;
-	const aisleSpace = (corridorSize - rowSizePx * colCnt) / (colCnt - 1);
-	const seats: Seat[] = Array(colCnt * rowSize * colSize)
+	const rowSizePx = (seatSize + seatGap) * rowCnt - seatGap;
+	const aisleSpace =
+		(corridorSize - columnEdgePad * 2 - rowSizePx * colSetCnt) / (colSetCnt - 1);
+	const seats: Seat[] = Array(colSetCnt * rowCnt * colCnt)
 		.fill(0)
 		.map((_, i) => {
-			const column = Math.floor((i % (rowSize * colCnt)) / rowSize);
-			const rowIndex = Math.floor(i / rowSize / colCnt);
-			const rowOffset = i % rowSize;
+			const column = Math.floor((i % (rowCnt * colSetCnt)) / rowCnt);
+			const rowIndex = Math.floor(i / rowCnt / colSetCnt);
+			const rowOffset = i % rowCnt;
 
 			const rowPosition = rowIndex * (seatSize + rowByRowPad);
-			const colPosition = column * (rowSizePx + aisleSpace) + rowOffset * seatSize;
+			const colPosition =
+				column * (rowSizePx + aisleSpace) + rowOffset * (seatSize + seatGap);
 			return {
 				id: String(i),
 				x: canvas.width - seatSize - backSpace - rowPosition + seatSize / 2,
-				y: columnEdgePad + colPosition - corridorSize / 2 + seatSize / 2,
+				y: colPosition + columnEdgePad - corridorSize / 2 + seatSize / 2,
 			};
 		});
 
-	const passSpeed = 5;
-	const passSeatSpeed = 3;
+	const passSpeed = canvas.height * 0.005;
+	const passSeatSpeed = canvas.height * 0.003;
 	const passRadii = seatSize * 0.4;
-	const passGap = 8;
+	const passGap = passRadii * 0.5;
 	const stowDuration = 100;
 	const stowFinishWait = 20;
 	const passengers: Passenger[] = seats.map((s, i) => ({
@@ -65,9 +67,10 @@ const simul = (() => {
 
 	return {
 		corridorSize,
-		rowSize,
-		colSize,
+		rowCnt,
 		colCnt,
+		colSetCnt,
+		seatGap,
 		seatSize,
 		seats,
 		passRadii,
@@ -87,24 +90,25 @@ const art = (() => {
 	const planeStroke = "#999";
 	const planeOutline = new Path2D();
 	for (const side of [-1, 1]) {
-		planeOutline.moveTo(canvas.width - 1200, side * (simul.corridorSize / 2));
-		planeOutline.lineTo(
-			canvas.width - 1000,
-			side * (simul.corridorSize / 2 + 80)
-		);
-		planeOutline.lineTo(canvas.width - 100, side * (canvas.height * 2));
-		planeOutline.lineTo(canvas.width - 330, side * (simul.corridorSize / 2));
-
 		const sideHeights = (side * simul.corridorSize) / 2;
+
+		// NEW: 1280 x 634
+		// OLD: 1920 x 993
+
+		planeOutline.moveTo(canvas.width * 0.375, sideHeights);
+		planeOutline.lineTo(canvas.width * 0.479, sideHeights + side * 80);
+		planeOutline.lineTo(canvas.width * 0.947, side * (canvas.height * 2));
+		planeOutline.lineTo(canvas.width * 0.828, sideHeights);
+
 		planeOutline.moveTo(0, sideHeights);
 		planeOutline.lineTo(canvas.width, sideHeights);
 	}
 
 	const planeBody = ctx.createLinearGradient(
 		0,
-		-simul.corridorSize / 2 - 40,
+		-simul.corridorSize / 2 - 30,
 		0,
-		+simul.corridorSize / 2 + 40
+		+simul.corridorSize / 2 + 30
 	);
 	planeBody.addColorStop(0, "transparent");
 	planeBody.addColorStop(0.05, "#777");
@@ -162,7 +166,7 @@ function clusterSeating(seatCluster = 1, reversed = false) {
 }
 
 function WindowMiddleAisleSeating(strict = false) {
-	if (simul.colCnt !== 2) throw Error("Only works in 2-column seatings!");
+	if (simul.colSetCnt !== 2) throw Error("Only works in 2-column seatings!");
 
 	let rowOffset = 0; // Track win-mid-aisle progress
 	let indexBag: number[] = [];
@@ -170,12 +174,12 @@ function WindowMiddleAisleSeating(strict = false) {
 	getColumnSet();
 	function getColumnSet() {
 		// Get subcolumn seat indices of both columns
-		for (let i = 0; i < simul.colSize; i++) {
-			const bigRowIndex = i * simul.rowSize * 2;
+		for (let i = 0; i < simul.colCnt; i++) {
+			const bigRowIndex = i * simul.rowCnt * 2;
 			indexBag.push(
 				// Go outside-in
 				bigRowIndex + rowOffset,
-				bigRowIndex + simul.rowSize * 2 - 1 - rowOffset
+				bigRowIndex + simul.rowCnt * 2 - 1 - rowOffset
 			);
 		}
 
@@ -200,7 +204,7 @@ function WindowMiddleAisleSeating(strict = false) {
 }
 
 function steffenSeating() {
-	if (simul.colCnt !== 2) throw Error("Only works in 2-column seatings!");
+	if (simul.colSetCnt !== 2) throw Error("Only works in 2-column seatings!");
 
 	let rowOffset = 0; // Track win-mid-aisle progress
 	let indexBag: number[] = [];
@@ -208,12 +212,12 @@ function steffenSeating() {
 	getColumnSet();
 	function getColumnSet() {
 		// Get subcolumn seat indices of both columns
-		for (let i = 0; i < simul.colSize; i++) {
-			const bigRowIndex = i * simul.rowSize * 2;
+		for (let i = 0; i < simul.colCnt; i++) {
+			const bigRowIndex = i * simul.rowCnt * 2;
 			indexBag.push(
 				// Go outside-in
 				bigRowIndex + rowOffset,
-				bigRowIndex + simul.rowSize * 2 - 1 - rowOffset
+				bigRowIndex + simul.rowCnt * 2 - 1 - rowOffset
 			);
 		}
 
@@ -319,9 +323,9 @@ function movePassenger(index: number) {
 		if (value === "random") {
 			randomSeating();
 		} else if (value === "b2f") {
-			clusterSeating(simul.colCnt * simul.rowSize * 4);
+			clusterSeating(simul.colSetCnt * simul.rowCnt * 4);
 		} else if (value === "f2b") {
-			clusterSeating(simul.colCnt * simul.rowSize * 4, true);
+			clusterSeating(simul.colSetCnt * simul.rowCnt * 4, true);
 		} else if (value === "wma") {
 			WindowMiddleAisleSeating();
 		} else if (value === "wmab2f") {
@@ -375,14 +379,25 @@ function draw() {
 	ctx.stroke(art.planeOutline);
 
 	// Seats
-	ctx.lineWidth = 5;
+	ctx.lineWidth = canvas.height * 0.005;
 	ctx.strokeStyle = "#111";
 	ctx.lineCap = "round";
-	const seatGap = 3;
-	const trueSeatSize = simul.seatSize - seatGap * 2 - ctx.lineWidth;
+	const trueSeatSize = simul.seatSize - ctx.lineWidth;
 	let seatCount = 0;
 	for (const { x, y } of simul.seats) {
-		const subindex = Math.floor(seatCount++ / simul.colCnt / simul.rowSize);
+		// ctx.fillStyle = "#38f";
+		// ctx.beginPath();
+		// ctx.roundRect(
+		// 	x - simul.seatSize / 2,
+		// 	y - simul.seatSize / 2,
+		// 	simul.seatSize,
+		// 	simul.seatSize,
+		// 	4
+		// );
+		// ctx.fill();
+		// ctx.stroke();
+
+		const subindex = Math.floor(seatCount++ / simul.colSetCnt / simul.rowCnt);
 		if (subindex % 2 === 0) {
 			ctx.fillStyle = "#38f";
 		} else {
@@ -391,8 +406,8 @@ function draw() {
 
 		ctx.beginPath();
 		ctx.roundRect(
-			x + 5 - simul.seatSize / 2 + seatGap + ctx.lineWidth / 2,
-			y + 5 - simul.seatSize / 2 + seatGap + ctx.lineWidth / 2,
+			x - simul.seatSize / 2 + ctx.lineWidth / 2,
+			y - simul.seatSize / 2 + ctx.lineWidth / 2,
 			trueSeatSize,
 			trueSeatSize,
 			4
@@ -402,11 +417,11 @@ function draw() {
 
 		ctx.beginPath();
 		ctx.roundRect(
-			x + simul.seatSize / 2 - 8,
-			y - simul.seatSize / 2 + 7,
-			15,
+			x + simul.seatSize / 2 - simul.seatSize * 0.1 - ctx.lineWidth,
+			y - simul.seatSize / 2,
+			simul.seatSize * 0.2,
 			simul.seatSize * 0.8,
-			4
+			2
 		);
 		ctx.fill();
 		ctx.stroke();
@@ -423,24 +438,25 @@ function draw() {
 		// Face
 		ctx.save();
 		ctx.translate(x, y);
-		let side = y === 0 ? 1 : -1;
-		let eyeY = -simul.passRadii * 0.2;
-		let mouthY = simul.passRadii * 0.6;
-		let mouthX = Math.sqrt(simul.passRadii ** 2 - mouthY ** 2) * side;
+		const side = y === 0 ? 1 : -1;
+		const eyeY = -simul.passRadii * 0.2;
+		const mouthY = simul.passRadii * 0.6;
+		const mouthX = Math.sqrt(simul.passRadii ** 2 - mouthY ** 2) * side;
+		const size = simul.passRadii * 0.1;
 
 		ctx.moveTo(mouthX, mouthY);
 		ctx.lineTo(0, mouthY);
 
 		ctx.moveTo(0, eyeY);
-		ctx.ellipse(0, eyeY, 2, 2, 0, 0, Math.PI * 2);
+		ctx.ellipse(0, eyeY, size, size, 0, 0, Math.PI * 2);
 		ctx.moveTo(mouthX, eyeY);
-		ctx.ellipse(mouthX, eyeY, 2, 2, 0, 0, Math.PI * 2);
+		ctx.ellipse(mouthX, eyeY, size, size, 0, 0, Math.PI * 2);
 		ctx.restore();
 
 		ctx.fillStyle = "#ffd32f";
 		ctx.strokeStyle = "#111";
 		ctx.lineCap = "round";
-		ctx.lineWidth = 4;
+		ctx.lineWidth = canvas.height * 0.005;
 		ctx.fill();
 		ctx.stroke();
 
@@ -474,7 +490,7 @@ function draw() {
 		const opacity = (1 - bagProg).toString();
 		ctx.fillStyle = `rgba(150, 75, 0, ${opacity})`;
 		ctx.strokeStyle = `rgba(34,34,34,${opacity})`;
-		ctx.lineWidth = 2;
+		ctx.lineWidth = canvas.height * 0.002;
 		ctx.fill();
 		ctx.stroke();
 	}
