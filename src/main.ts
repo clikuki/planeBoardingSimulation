@@ -26,11 +26,12 @@ const simul = (() => {
 	const rowCnt = 3; // Num of side by side seats
 	const colCnt = 16; // Num of rows of seats
 	const colSetCnt = 2; // Number of seating columns
-	const rowByRowPad = 20;
-	const columnEdgePad = 15;
-	const backSpace = 100;
-	const seatGap = 3;
 	const seatSize = canvas.height * 0.068;
+	const seatOffset = seatSize * 0.1;
+	const backSpace = seatSize * 1.5;
+	const rowByRowPad = seatSize * 0.4;
+	const columnEdgePad = seatSize * 0.2;
+	const seatGap = seatSize * 0.05;
 
 	const rowSizePx = (seatSize + seatGap) * rowCnt - seatGap;
 	const aisleSpace =
@@ -47,8 +48,15 @@ const simul = (() => {
 				column * (rowSizePx + aisleSpace) + rowOffset * (seatSize + seatGap);
 			return {
 				id: String(i),
-				x: canvas.width - seatSize - backSpace - rowPosition + seatSize / 2,
-				y: colPosition + columnEdgePad - corridorSize / 2 + seatSize / 2,
+				x:
+					canvas.width -
+					seatSize -
+					backSpace -
+					rowPosition +
+					seatSize / 2 -
+					seatOffset,
+				y:
+					colPosition + columnEdgePad - corridorSize / 2 + seatSize / 2 - seatOffset,
 			};
 		});
 
@@ -72,6 +80,7 @@ const simul = (() => {
 		colSetCnt,
 		seatGap,
 		seatSize,
+		seatOffset,
 		seats,
 		passRadii,
 		passSpeed,
@@ -91,9 +100,6 @@ const art = (() => {
 	const planeOutline = new Path2D();
 	for (const side of [-1, 1]) {
 		const sideHeights = (side * simul.corridorSize) / 2;
-
-		// NEW: 1280 x 634
-		// OLD: 1920 x 993
 
 		planeOutline.moveTo(canvas.width * 0.375, sideHeights);
 		planeOutline.lineTo(canvas.width * 0.479, sideHeights + side * 80);
@@ -406,22 +412,26 @@ function draw() {
 
 		ctx.beginPath();
 		ctx.roundRect(
-			x - simul.seatSize / 2 + ctx.lineWidth / 2,
-			y - simul.seatSize / 2 + ctx.lineWidth / 2,
+			x - simul.seatSize / 2 + ctx.lineWidth / 2 + simul.seatOffset,
+			y - simul.seatSize / 2 + ctx.lineWidth / 2 + simul.seatOffset,
 			trueSeatSize,
 			trueSeatSize,
-			4
+			simul.seatSize * 0.05
 		);
 		ctx.fill();
 		ctx.stroke();
 
 		ctx.beginPath();
 		ctx.roundRect(
-			x + simul.seatSize / 2 - simul.seatSize * 0.1 - ctx.lineWidth,
-			y - simul.seatSize / 2,
+			x +
+				simul.seatSize / 2 -
+				simul.seatSize * 0.1 -
+				ctx.lineWidth +
+				simul.seatOffset,
+			y - simul.seatSize / 2 + simul.seatOffset,
 			simul.seatSize * 0.2,
 			simul.seatSize * 0.8,
-			2
+			simul.seatSize * 0.01
 		);
 		ctx.fill();
 		ctx.stroke();
