@@ -470,38 +470,43 @@ function draw() {
 		ctx.stroke();
 
 		// Bag
-		ctx.beginPath();
+		if (stowTime > 0) {
+			ctx.beginPath();
+			const bagProg = (simul.stowDuration - stowTime) / simul.stowDuration;
+			const bagOffset = simul.passRadii * bagProg;
+			const bagX = x - simul.passRadii * (3 / 2);
+			const bagY = y + 6 - bagOffset;
+			const bagWidth = simul.passRadii * 1.6;
+			const bagHeight = simul.passRadii;
+			ctx.save();
+			ctx.translate(bagX + bagWidth / 2, bagY);
+			ctx.rotate(Math.PI * bagProg);
 
-		const bagProg = (simul.stowDuration - stowTime) / simul.stowDuration;
-		const bagOffset = simul.passRadii * bagProg;
-		const bagX = x - simul.passRadii * (3 / 2);
-		const bagY = y + 6 - bagOffset;
-		const bagWidth = simul.passRadii * 1.6 - 4;
-		const bagHeight = simul.passRadii;
-		ctx.save();
-		ctx.translate(bagX + bagWidth / 2, bagY);
-		ctx.rotate(Math.PI * bagProg);
+			// Case
+			ctx.roundRect(-bagWidth / 2, 0, bagWidth, bagHeight, 2);
 
-		// Case
-		ctx.roundRect(-bagWidth / 2, 0, bagWidth, bagHeight, 2);
+			// Pocket
+			ctx.moveTo(-bagWidth * 0.35, bagHeight * 0.25);
+			ctx.lineTo(bagWidth * 0.35, bagHeight * 0.25);
 
-		// Pocket
-		ctx.moveTo(-bagWidth / 2 + 5, 5);
-		ctx.lineTo(bagWidth / 2 - 5, 5);
+			const opacity = (1 - bagProg).toString();
+			ctx.fillStyle = `rgba(150, 75, 0, ${opacity})`;
+			ctx.strokeStyle = `rgba(34,34,34,${opacity})`;
+			ctx.lineWidth = canvas.height * 0.002;
+			ctx.fill();
+			ctx.stroke();
 
-		// Handle
-		ctx.moveTo(-8, 2);
-		ctx.lineTo(-6, -3);
-		ctx.lineTo(6, -3);
-		ctx.lineTo(8, 2);
-		ctx.restore();
+			// Handle
+			ctx.beginPath();
+			ctx.moveTo(-bagWidth * 0.2, 0);
+			ctx.lineTo(-bagWidth * 0.2, -bagHeight * 0.2);
+			ctx.lineTo(bagWidth * 0.2, -bagHeight * 0.2);
+			ctx.lineTo(bagWidth * 0.2, 0);
+			ctx.lineWidth = canvas.height * 0.004;
+			ctx.stroke();
 
-		const opacity = (1 - bagProg).toString();
-		ctx.fillStyle = `rgba(150, 75, 0, ${opacity})`;
-		ctx.strokeStyle = `rgba(34,34,34,${opacity})`;
-		ctx.lineWidth = canvas.height * 0.002;
-		ctx.fill();
-		ctx.stroke();
+			ctx.restore();
+		}
 	}
 
 	ctx.restore();
