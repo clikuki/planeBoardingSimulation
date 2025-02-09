@@ -20,7 +20,6 @@ canvas.height = innerHeight;
 
 const simul = (() => {
 	// Initialize data
-	// TODO: on startup, scale numbers to fit viewport
 
 	const corridorSize = canvas.height * 0.55;
 	const rowCnt = 3; // Num of side by side seats
